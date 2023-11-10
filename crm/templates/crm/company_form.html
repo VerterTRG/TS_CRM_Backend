@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Company</title>
+</head>
+<body>
+    <h2>Create Company</h2>
+    <form method="post" id="companyForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div id="legalFields" style="display:none;">
+            <h3>Legal Business Information</h3>
+            {{ legal_form.as_p }}
+        </div>
+
+        <div id="individualFields" style="display:none;">
+            <h3>Individual Business Information</h3>
+            {{ individual_form.as_p }}
+        </div>
+
+        <div id="personFields" style="display:none;">
+            <h3>Person Business Information</h3>
+            {{ person_form.as_p }}
+        </div>
+
+        <button type="submit">Save</button>
+    </form>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+        var typeOfBusinessField = document.querySelector('select[name="typeOfBusiness"]');
+        
+        function toggleFields(value) {
+            // Hide all fields initially
+            document.getElementById('legalFields').style.display = 'none';
+            document.getElementById('individualFields').style.display = 'none';
+            document.getElementById('personFields').style.display = 'none';
+
+            // Show the selected field set
+            if (value === 'Legal') {
+                document.getElementById('legalFields').style.display = 'block';
+            } else if (value === 'Individual') {
+                document.getElementById('individualFields').style.display = 'block';
+            } else if (value === 'Person') {
+                document.getElementById('personFields').style.display = 'block';
+            }
+        }
+
+        // Toggle fields on 'change' event
+        typeOfBusinessField.addEventListener('change', function () {
+            toggleFields(this.value);
+        });
+
+        // Check the current value and toggle fields on page load
+        var currentValue = typeOfBusinessField.value;
+        toggleFields(currentValue);
+        });
+    </script>
+</body>
+</html>
