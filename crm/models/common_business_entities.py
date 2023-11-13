@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from crm.models.common_entities import AbstractEntity
+from crm.globals.validators import create_digits_validator
 
 
 
@@ -27,7 +28,7 @@ class Business:
             abstract = True
 
         formal_name = models.CharField(max_length=255, blank=True, verbose_name="Полное наименование")
-        inn = models.CharField(max_length=12, null=True, blank=True, verbose_name="ИНН")
+        inn = models.CharField(max_length=12, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')])
         # Regerence to bank account
         # History interactions
     
@@ -35,8 +36,8 @@ class Business:
         class Meta:
             db_table = "crm_business_legals"
         
-        kpp = models.CharField(max_length=9, null=True, blank=True, verbose_name="КПП")
-        ogrn = models.CharField(max_length=13, null=True, blank=True, verbose_name="ОГРН")
+        kpp = models.CharField(max_length=9, null=True, blank=True, verbose_name="КПП", validators=[create_digits_validator('КПП')])
+        ogrn = models.CharField(max_length=13, null=True, blank=True, verbose_name="ОГРН", validators=[create_digits_validator('ОГРН')])
 
         partner = models.OneToOneField('crm.Company', related_name="legal", on_delete=models.CASCADE, null=True)
 
@@ -45,7 +46,7 @@ class Business:
         class Meta:
             db_table = "crm_business_individuals"
         
-        ogrn = models.CharField(max_length=15, null=True, blank=True, verbose_name="ОГРН")
+        ogrn = models.CharField(max_length=15, null=True, blank=True, verbose_name="ОГРН", validators=[create_digits_validator('ОГРН')])
 
         partner = models.OneToOneField('crm.Company', related_name="individual", on_delete=models.CASCADE, null=True)
 

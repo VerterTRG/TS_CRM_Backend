@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Company list</h2>
+
+
+{% if parent %}
+    <div class="breadcrumbs">
+        
+        &gt; <a href="{% url 'list-company' %}">...</a>
+        {% for company in parent.get_breadcrumbs %}
+        
+            {% if not forloop.last %}
+                &gt; <a href="{{ company.get_absolute_url }}">{{ company.name }}</a>                            
+            {% endif %}
+
+            {% if forloop.last %}
+                &gt; <b>{{ company.name }}</b>
+            {% endif %}
+            
+        {% endfor %}
+    </div>
+{% endif %}
+
+
+
+
+{% for c in company_list %}
+<li> 
+    <!-- <input type="checkbox" name="is_group" value="group" 
+        {% if c.isGroup %} checked {% endif %}
+    > -->
+    {% if c.isGroup %}
+    {% endif %}
+    <a href="{{ c.get_absolute_url }}">
+        {{ c.name }}
+    </a>
+</li>
+{% endfor %}
+
+{% endblock content %}

@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Company</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+<!-- {% block title %}{{ title }}{% endblock title %} -->
+
+{% block content %}
+    <!-- Содержимое конкретной страницы -->
     <h2>Create Company</h2>
     <form method="post" id="companyForm">
         {% csrf_token %}
@@ -59,5 +57,4 @@
         toggleFields(currentValue);
         });
     </script>
-</body>
-</html>
+{% endblock content %}
