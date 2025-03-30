@@ -1,7 +1,4 @@
 from django.db import models
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericRelation
 from crm.models.common_entities import AbstractEntity
 from crm.globals.validators import create_digits_validator
 
@@ -29,7 +26,7 @@ class Business:
 
         formal_name = models.CharField(max_length=255, blank=True, verbose_name="Полное наименование")
         inn = models.CharField(max_length=12, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')])
-        # Regerence to bank account
+        # Reference to bank account
         # History interactions
     
     class Legal(BaseExt):
@@ -84,47 +81,14 @@ class AbstractBusinessEntity(AbstractEntity):
         verbose_name="Тип контрагента"
     )
 
-    # inn = models.CharField(max_length=12, null=True, blank=True)
-
-    # # Поля для GenericForeignKey
-    # content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    # object_id = models.PositiveIntegerField()
-    # content_object = GenericForeignKey('content_type', 'object_id')
-
-    # # Связь с моделями для каждого типа бизнеса
-    # legal_business = GenericRelation(Business.Legal, related_query_name='legal')
-    # individual_business = GenericRelation(Business.Individual, related_query_name='individual')
-    # person_business = GenericRelation(Business.Person, related_query_name='person')
 
     def save(self, *args, **kwargs):
-        # if self.is_group:
-        #     super().save(*args, **kwargs)
-        #     return
 
-        # if not self.info:
-        #     initialData = {'partner':self,'formal_name':self.name, 'inn':self.inn}
-        #     if self.typeOfBusiness == Business.Types.Legal:
-        #         business_instance = Business.Legal(**initialData)
-        #     elif self.typeOfBusiness == Business.Types.Individual:
-        #         business_instance = Business.Individual(**initialData)
-        #     elif self.typeOfBusiness == Business.Types.Person:
-        #         business_instance = Business.Person(**initialData)
-        #     else:
-        #         raise ValueError("Invalid type of business")
-        #     business_instance.save()
-        #     self.content_object = business_instance
-        # else:
-        #     business_instance = self.content_object
-        #     if business_instance is not None:
-        #         business_instance.save()
         if  self.isGroup and self.typeOfBusiness:
             raise ValueError("Cannot save a group with a type of business specified. [isGroup == True]")
         
         super().save(*args, **kwargs)
 
-    # @property
-    # def info(self):
-    #     return self.content_object
     
     @property
     def info(self):

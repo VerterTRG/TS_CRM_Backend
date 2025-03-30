@@ -4,18 +4,25 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.contrib import messages
 
-from django.views.generic import ListView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from crm.models.common_business_entities import Business
 
 from crm.models.copmanies import Company
 from .forms import CompanyForm, IndividualForm, LegalForm, PersonForm #, LegalFormSet, IndividualFormSet, PersonFormSet
 from .services import create_company
 
+form_classes = {
+    Company:                CompanyForm,
+    Business.Legal:         LegalForm,
+    Business.Individual:    IndividualForm,
+    Business.Person:        PersonForm,
+}
+
 class CompanyCreateView(CreateView):
     
     model = Company
     form_class = CompanyForm
-    template_name = 'crm/company_form.html'
+    # template_name = 'crm/company_form.html'
     success_url = '/admin/'
     extra_context = {'title': "Создание контрагента"}
 
@@ -51,7 +58,7 @@ class CompanyCreateView(CreateView):
             
                 if not type_of_business:
                     pass 
-                #TODO: 
+                #DEBUG: [CompanyCreateView] Shoud be tested creation Company() when type_of_business = None 
                 # perform raise
                 # to provide some message into UI, that typeOfBusiness - required. 
                 # Or make the field as required INTO form (if not typeOfBusiness => it's group)
@@ -59,17 +66,14 @@ class CompanyCreateView(CreateView):
 
                 company_data = form.cleaned_data
 
-                # Сохраняем связанные формы в зависимости от типа бизнеса
+                # Получаем связанные формы в зависимости от типа бизнеса
                 if type_of_business == Business.Types.Legal:
                     legal_form = context['legal_form']
                     if not legal_form.is_valid():
                         raise ValidationError('Legal form is not valid')
                     
                     ext_compnay_data = legal_form.cleaned_data
-                    
-                    # legal = legal_form.save(commit=False)
-                    # legal.partner = self.object  # Устанавливаем связь с компанией
-                    # legal.save()
+
 
                 elif type_of_business == Business.Types.Individual:
                     individual_form = context['individual_form']
@@ -77,10 +81,7 @@ class CompanyCreateView(CreateView):
                         raise ValidationError('Individual form is not valid')
                     
                     ext_compnay_data = individual_form.cleaned_data
-                    
-                    # individual = individual_form.save(commit=False)
-                    # individual.partner = self.object
-                    # individual.save()
+
 
                 elif type_of_business == Business.Types.Person:
                     person_form = context['person_form']
@@ -88,10 +89,7 @@ class CompanyCreateView(CreateView):
                         raise ValidationError('Person form is not valid')
                     
                     ext_compnay_data = person_form.cleaned_data
-                    
-                    # person = person_form.save(commit=False)
-                    # person.partner = self.object
-                    # person.save()
+
 
                 else:
                     ext_compnay_data = None
@@ -129,9 +127,60 @@ class CompanyListView(ListView):
         context.update(self.extra_context)
 
         if 'parent' in self.request.GET:
-            context['parent'] = get_object_or_404(Company, pk=self.request.GET.get('parent'))
+            context['breadcrumb'] = get_object_or_404(Company, pk=self.request.GET.get('parent'))
             # context['parent'] = Company.objects.get(pk=self.request.GET.get('parent'))
 
         # context["form"] = timezone.now()
         return context
 
+class CompanyDetail(DetailView):
+    model = Company
+
+    extra_context = {'title': "Просмотр контрагента"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.extra_context)
+
+        obj = self.get_object()
+
+        if obj and 'title' in context:
+            context['title'] = getattr(obj, 'name')
+
+        # context['object'] = obj
+        
+        # fields = []
+        # for field in obj._meta.get_fields():
+        #     if field.concrete and not field.is_relation: # type: ignore
+        #         fields.append({
+        #             'label': getattr(field, 'verbose_name'), 
+        #             'value': getattr(obj, field.name)
+        #         })
+        form_class = form_classes[type(obj)]
+        form = form_class(instance=obj)
+        form.set_read_only()
+        context['form'] = form
+
+        related_obj = getattr(obj, 'info')
+        if related_obj:
+            form_class = form_classes[type(related_obj)]
+            form = form_class(instance=related_obj)
+            form.set_read_only()
+            context['related_form'] = form
+            # for field in related_obj._meta.get_fields():
+            #     if field.concrete and not field.is_relation:
+            #         fields.append({
+            #             'label': getattr(field, 'verbose_name'), 
+            #             'value': getattr(related_obj, field.name)
+            #         })
+        # context['fields'] = fields
+        return context
+    
+class Home(TemplateView):
+    template_name = 'crm/home.html'
+    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # context.update(self.extra_context)
+        return context

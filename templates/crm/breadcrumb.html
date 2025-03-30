@@ -1,0 +1,17 @@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'list-company' %}">Home</a></li>
+        {% for company in breadcrumb.get_breadcrumbs %}
+
+        {% if not forloop.last %}
+        <li class="breadcrumb-item"><a href="{{ company.get_absolute_url }}">{{ company.name }}</a></li>
+        {% endif %}
+    
+        {% if forloop.last %}
+        <li class="breadcrumb-item active" aria-current="page">{{ company.name }}</li>
+        {% endif %}
+    
+        {% endfor %}
+
+    </ol>
+</nav>

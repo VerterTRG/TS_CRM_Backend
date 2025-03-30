@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+
+{% if object.isGroup %}
+<h1>Группа {{ object.name }}</h1>
+
+{{ object.children.all }}
+
+
+{% else %}
+
+<h1>Карточка контрагента</h1>
+<!-- {% for field in fields %}
+    <p><strong>{{ field.label }}:</strong> {{ field.value }}</p>
+    {% endfor %} -->
+    
+    {{ form.as_p }}
+    
+    {% if related_form %}
+    {{ related_form.as_p }}
+    {% endif %}
+    
+{% endif %}
+    
+{% endblock %}

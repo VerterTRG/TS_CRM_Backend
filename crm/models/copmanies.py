@@ -12,28 +12,6 @@ class Company(AbstractBusinessEntity):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-    # def changeClass(self):
-    #     if self.typeOfBusiness == Business.Types.Individual:
-    #         pass
-    #     elif self.typeOfBusiness == Business.Types.Legal:
-    #         pass
-    #     elif self.typeOfBusiness == Business.Types.Person:
-    #         pass
-    #     elif self.typeOfBusiness == Business.Types.Government:
-    #         pass
-    #     elif self.typeOfBusiness == Business.Types.Other:
-    #         pass
-
-    
-
-    # @property
-    # def typeOfBusiness(self):
-    #     return self._typeOfBusiness
-
-    # @typeOfBusiness.setter
-    # def typeOfBusiness(self, newType):
-    #     super().__setattr__('typeOfBusiness', newType)
-    #     self.changeClass()
 
 
 

@@ -13,14 +13,19 @@ def add_model_validators_to_form_field(form_field, model_field):
     for validator in model_field.validators:
         form_field.validators.append(validator)
 
+class BusinessFormMixin():
+    def set_read_only(self):
+        for field in self.fields.values(): # type: ignore
+            field.disabled = True
 
-class CompanyForm(forms.ModelForm):
+class CompanyForm(forms.ModelForm, BusinessFormMixin):
     class Meta:
         model = Company
         fields = ['typeOfBusiness', 'name']
 
 # Формы для связанных моделей
-class LegalForm(forms.ModelForm):
+class LegalForm(forms.ModelForm, BusinessFormMixin):
+
 
     class Meta:
         model = Business.Legal
@@ -79,12 +84,12 @@ class LegalForm(forms.ModelForm):
 
 
 
-class IndividualForm(forms.ModelForm):
+class IndividualForm(forms.ModelForm, BusinessFormMixin):
     class Meta:
         model = Business.Individual
         exclude = ('partner',)
 
-class PersonForm(forms.ModelForm):
+class PersonForm(forms.ModelForm, BusinessFormMixin):
     class Meta:
         model = Business.Person
         exclude = ('partner',)

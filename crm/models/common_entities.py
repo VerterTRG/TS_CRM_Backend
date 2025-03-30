@@ -3,10 +3,27 @@ from django.urls import reverse
 # from crm.models import User # 'auth.User ???'
 
 class AbstractEntity(models.Model):
-    name = models.CharField(max_length=150, blank=False, verbose_name="Наименование")
-    isGroup = models.BooleanField(default=False, verbose_name="Группа")
-    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, verbose_name="Родитель")
-    inCharge = models.ForeignKey('crm.User', null=True, on_delete=models.SET_NULL, verbose_name="Ответственный")
+
+    name        = models.CharField(max_length=150, blank=False, verbose_name="Наименование")
+
+    isGroup     = models.BooleanField(default=False, verbose_name="Группа")
+
+    parent      = models.ForeignKey(
+                                'self', 
+                                null=True, 
+                                blank=True, 
+                                on_delete=models.SET_NULL, 
+                                verbose_name="Родитель", 
+                                related_name="children", 
+                                # related_query_name="parent"
+                                )
+    # creator
+    inCharge     = models.ForeignKey(
+                                'crm.User', # TODO: Should be asign app's user when it's be done 'users.User'
+                                null=True,
+                                on_delete=models.SET_NULL,
+                                verbose_name="Ответственный",                            
+                                )
 
     class Meta:
         abstract = True
@@ -17,6 +34,7 @@ class AbstractEntity(models.Model):
     def __save__(self, *args, **kwargs):
         self.save(*args, **kwargs)
 
+    # TODO: Should be created a common util or service to get absolut url by main model
     def get_absolute_url(self):
         if self.isGroup:
             return reverse('list-company') + f'?parent={self.pk}'
