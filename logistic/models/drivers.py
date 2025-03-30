@@ -15,7 +15,7 @@ class Driver(models.Model):
         # null=True,
         # default = TypeID.Passport,
         verbose_name="Документ")
-    data_id  = models.CharField(max_length=255, null=True, blank=True, verbose_name="Реквизиты документа")
+    data_id  = models.CharField(max_length=255, null=True, blank=True, verbose_name="Реквизиты")
     driver_licence = models.CharField(max_length=30, null=True, blank=True, verbose_name="Водительское удостоверение")
 
 

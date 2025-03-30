@@ -21,7 +21,7 @@ class Assignment(models.Model):
                               blank=False,
                               on_delete=models.SET_NULL,
                               verbose_name="Автомобиль")
-    odometer_start  = models.PositiveSmallIntegerField(verbose_name="Показание одометра перед выездом")
+    odometer_start  = models.PositiveSmallIntegerField(blank=True, verbose_name="Показание одометра перед выездом")
     odometer_end    = models.PositiveSmallIntegerField(blank=True, verbose_name="Показание одометра после возвращения")
     date_close = models.DateField(blank = True, verbose_name="Дата закрытия")
 
