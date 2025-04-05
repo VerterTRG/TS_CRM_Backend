@@ -1,0 +1,69 @@
+{# crm/company/company_list.html или ваш путь #}
+{% extends 'base.html' %}
+{% load i18n %} {# Если вы используете переводы #}
+
+{% block title %}{% trans "Список контрагентов" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4"> {# Пример контейнера Bootstrap #}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>{% trans "Список контрагентов" %}</h1>
+        {# Ссылка на страницу создания нового контрагента #}
+        <a href="{% url 'company-create' %}" class="btn btn-primary">{% trans "Добавить контрагента" %}</a>
+    </div>
+
+    {# Проверяем, есть ли контрагенты в списке #}
+    {% if companies %}
+        <div class="table-responsive"> {# Для адаптивности на малых экранах #}
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">{% trans "Название / ФИО" %}</th>
+                        <th scope="col">{% trans "Тип" %}</th>
+                        <th scope="col">{% trans "Дата добавления" %}</th>
+                        <th scope="col">{% trans "Действия" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# Перебираем каждого контрагента в списке #}
+                    {% for company in companies %}
+                    <tr>
+                        {# Используем display_name для отображения имени/названия #}
+                        {# Ссылка ведет на детальную страницу контрагента #}
+                        <td>
+                            <a href="{% url 'company-detail' pk=company.pk %}">
+                                {{ company.display_name|default:"(Имя не указано)" }}
+                            </a>
+                        </td>
+                        {# Используем get_company_type_display для отображения читаемого типа #}
+                        <td>{{ company.get_company_type_display }}</td>
+                        {# Отображаем дату создания с форматированием #}
+                        <td>{{ company.created_at|date:"d.m.Y H:i" }}</td>
+                        {# Ссылки на просмотр и редактирование #}
+                        <td>
+                            <a href="{% url 'company-detail' pk=company.pk %}" class="btn btn-sm btn-info">{% trans "Просмотр" %}</a>
+                            <a href="{% url 'company-update' pk=company.pk %}" class="btn btn-sm btn-warning ms-1">{% trans "Редактировать" %}</a>
+                            {# Сюда можно добавить кнопку удаления, если нужно #}
+                            {# <a href="{% url 'company-delete' pk=company.pk %}" class="btn btn-sm btn-danger ms-1">{% trans "Удалить" %}</a> #}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Здесь можно добавить пагинацию, если она настроена во View #}
+        {# {% include 'includes/pagination.html' %} #}
+
+    {% else %}
+        {# Сообщение, если список контрагентов пуст #}
+        <div class="alert alert-info" role="alert">
+            {% trans "Контрагенты еще не добавлены." %}
+        </div>
+        <p>
+            <a href="{% url 'company-create' %}" class="btn btn-primary">{% trans "Добавить первого контрагента" %}</a>
+        </p>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -12,17 +12,21 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Загружаем переменные из .env файла, если он есть
+load_dotenv(BASE_DIR / '.env') # Ищем .env в корне проекта
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8r-%-epep)66as(9l%+$5gyzy5d(tlvu2-2)0x4qqk!k24f&n1'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -32,7 +36,10 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
+SHARED_APP = [
+    'django_tenants',
+    'customers',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,12 +51,21 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     
+    'users',
+
+]
+
+TENANT_APPS = [
+    'roles',
     'crm',
     'logistic',
     'contacts',
 ]
 
+NSTALLED_APPS = SHARED_APP + [app for app in TENANT_APPS if app not in SHARED_APP]
+
 MIDDLEWARE = [
+    # 'django_tenants.middleware.main.TenantMainMiddleware', № использовать для идентификации по host/URL
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,6 +73,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'users.middleware.TenantIdentificationMiddleware'
 ]
 
 ROOT_URLCONF = 'dev.urls'
@@ -83,12 +101,30 @@ WSGI_APPLICATION = 'dev.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'dev' / 'db.sqlite3',
+#     }
+# }
+
+DB_USER_FROM_ENV = os.getenv('DB_USR')
+DB_PASSWORD_FROM_ENV = os.getenv('DB_PSW')
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'dev' / 'db.sqlite3',
+        'ENGINE': 'django_tenants.postgresql_backend', # Обязательно движок django-tenants
+        'NAME': 'django_base',
+        'USER': DB_USER_FROM_ENV,
+        'PASSWORD': DB_PASSWORD_FROM_ENV,
+        'HOST': 'localhost', # <- Правильно для соединения внутри WSL
+        'PORT': '5432',      # <- Стандартный порт Postgres
     }
 }
+
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
 
 
 # Password validation
@@ -109,7 +145,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'crm.User'
+AUTH_USER_MODEL = 'users.CustomUser'
+
+TENANT_MODEL = "customers.Client"
+TENANT_DOMAIN_MODEL = "customers.Domain"
 
 
 # Internationalization

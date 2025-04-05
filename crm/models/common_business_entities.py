@@ -13,6 +13,7 @@ class Business:
         Government = "Government", "Государственный орган"
         Other = "Other", "Другой"
 
+    """Не используется"""
     class LegalTypes(models.TextChoices):
         OOO = "OOO", "ООО"
         PAO = "PAO", "ПАО"
@@ -25,38 +26,66 @@ class Business:
             abstract = True
 
         formal_name = models.CharField(max_length=255, blank=True, verbose_name="Полное наименование")
-        inn = models.CharField(max_length=12, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')])
         # Reference to bank account
         # History interactions
     
     class Legal(BaseExt):
-        class Meta:
-            db_table = "crm_business_legals"
-        
+ 
+        inn = models.CharField(max_length=10, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')])
         kpp = models.CharField(max_length=9, null=True, blank=True, verbose_name="КПП", validators=[create_digits_validator('КПП')])
         ogrn = models.CharField(max_length=13, null=True, blank=True, verbose_name="ОГРН", validators=[create_digits_validator('ОГРН')])
 
-        partner = models.OneToOneField('crm.Company', related_name="legal", on_delete=models.CASCADE, null=True)
+        company = models.OneToOneField('crm.Company', related_name="legal", on_delete=models.CASCADE, null=True)
+
+        def get_display_name(self):
+            return self.formal_name
+
+        def __str__(self):
+            return self.formal_name
+
+        class Meta:
+            db_table = "crm_business_legals"
+            verbose_name = ('Профиль юр. лица')
+            verbose_name_plural = ('Профили юр. лиц')
 
 
     class Individual(BaseExt):
-        class Meta:
-            db_table = "crm_business_individuals"
-        
+
+        inn = models.CharField(max_length=12, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')])
         ogrn = models.CharField(max_length=15, null=True, blank=True, verbose_name="ОГРН", validators=[create_digits_validator('ОГРН')])
 
-        partner = models.OneToOneField('crm.Company', related_name="individual", on_delete=models.CASCADE, null=True)
+        company = models.OneToOneField('crm.Company', related_name="individual", on_delete=models.CASCADE, null=True)
 
+        def get_display_name(self):
+        # Можно добавить префикс для ясности
+            return f"ИП {self.formal_name}"
+
+        def __str__(self):
+            return self.get_display_name()
+
+        class Meta:
+            db_table = "crm_business_individuals"
+            verbose_name = ('Профиль ИП')
+            verbose_name_plural = ('Профили ИП')
 
 
     class Person(BaseExt):
+
+        personal_id = models.CharField(max_length=255, null=True, blank=True, verbose_name="Удостоверение личности")
+
+        company = models.OneToOneField('crm.Company', related_name="person", on_delete=models.CASCADE)
+    
+        def get_display_name(self):
+            return self.formal_name
+
+        def __str__(self):
+            return self.formal_name
+
         class Meta:
             db_table = "crm_business_persons"
-        
-        personal_id = models.TextField(max_length=255, null=True, blank=True, verbose_name="Удостоверение личности")
+            verbose_name = ('Профиль физ. лица')
+            verbose_name_plural = ('Профили физ. лиц')
 
-        partner = models.OneToOneField('crm.Company', related_name="person", on_delete=models.CASCADE)
-    
     def create_business(self, type_of_business, data):
         business_class = self.Types(type_of_business)
         if business_class:
@@ -73,23 +102,34 @@ class AbstractBusinessEntity(AbstractEntity):
         abstract = True
 
     # name, is_group, parent, in_charge
-    typeOfBusiness = models.CharField(
+    company_type = models.CharField(verbose_name="Тип контрагента",
         max_length=10,
-        choices=Business.Types.choices,  # Используем определенное перечисление
-        null=True,
-        blank=False,
-        verbose_name="Тип контрагента"
+        choices=Business.Types.choices  # Используем определенное перечисление
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
     def save(self, *args, **kwargs):
 
-        if  self.isGroup and self.typeOfBusiness:
+        if  self.isGroup and self.company_type:
             raise ValueError("Cannot save a group with a type of business specified. [isGroup == True]")
         
         super().save(*args, **kwargs)
 
     
+    # Вспомогательные методы для удобства
+    def get_profile(self):
+        """Возвращает связанный профиль в зависимости от типа."""
+        if self.company_type == Business.Types.Legal:
+            # Используем getattr для безопасности, если профиль еще не создан
+            return getattr(self, 'legal', None)
+        elif self.company_type == Business.Types.Individual:
+            return getattr(self, 'individual', None)
+        elif self.company_type == Business.Types.Person:
+            return getattr(self, 'person', None)
+        return None # На случай появления новых типов без профиля
+
     @property
     def info(self):
         if hasattr(self, 'legal'):
@@ -99,7 +139,23 @@ class AbstractBusinessEntity(AbstractEntity):
         elif hasattr(self, 'person'):
             return self.person # type: ignore
         return None
+    
+    @property
+    def display_name(self):
+        """Возвращает имя/название из соответствующего профиля."""
+        profile = self.get_profile()
+        if profile:
+            # Каждый профиль должен иметь метод/свойство для получения имени
+            if hasattr(profile, 'get_display_name'):
+                return profile.get_display_name()
+            elif hasattr(profile, 'name'): # Фолбэк на поле name
+                return profile.name
+            elif hasattr(profile, 'full_name'): # Фолбэк на поле full_name
+                return profile.full_name
+        return f"Контрагент ID: {self.id}" # type: ignore # Запасной вариант
 
+    def __str__(self):
+        return self.display_name
 
 
 

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Редактирование контрагента" %}: {{ company.display_name|default:company.pk }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    {# Заголовок с именем редактируемого контрагента #}
+    <h1>{% trans "Редактирование" %}: {{ company.display_name|default:"Контрагент ID:" }} {% if not company.display_name %}{{ company.pk }}{% endif %}</h1>
+    <hr>
+
+    <form method="post" novalidate> {# Используем POST, novalidate отключает HTML5 валидацию #}
+        {% csrf_token %} {# Обязательный CSRF токен #}
+
+        {# Отображаем тип контрагента как информацию (обычно тип не меняют при редактировании) #}
+        <div class="mb-3">
+            <strong>{% trans "Тип контрагента" %}:</strong> {{ company.get_company_type_display }}
+        </div>
+
+        {# --- Сюда можно вставить рендеринг company_form, если бы он был --- #}
+        {% if company_form %}
+            <h2>{% trans "Общие данные" %}</h2>
+             {% if company_form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ company_form.non_field_errors }}
+                </div>
+            {% endif %}
+            {{ company_form.as_p }}
+            <hr>
+        {% endif %}
+        {# ----------------------------------------------------------------- #}
+
+
+        {# --- Рендеринг формы профиля --- #}
+        {# Заголовок зависит от типа, можно сделать динамическим, если нужно #}
+        <h2>{% trans "Реквизиты и данные" %}</h2>
+
+        {# Отображаем не полейные ошибки формы профиля #}
+        {% if profile_form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ profile_form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {# Рендерим саму форму профиля. Django View передала нам нужную форму #}
+        {# (LegalEntityProfileForm или SoleProprietorProfileForm и т.д.) #}
+        {# Она уже содержит данные для редактирования #}
+        {{ profile_form.as_p }} {# Или as_ul, as_table, или рендеринг полей вручную #}
+
+
+        {# --- Кнопки действий --- #}
+        <hr>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> {% trans "Сохранить изменения" %}
+            </button>
+            {# Ссылка для отмены - ведет на детальный просмотр этого контрагента #}
+            <a href="{% url 'company-detail' pk=company.pk %}" class="btn btn-secondary ms-2">
+                {% trans "Отмена" %}
+            </a>
+        </div>
+
+    </form> {# Конец формы #}
+
+</div> {# Конец контейнера #}
+{% endblock %}

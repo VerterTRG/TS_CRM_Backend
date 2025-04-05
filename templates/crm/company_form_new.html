@@ -1,0 +1,123 @@
+{% extends 'base.html' %} {# Или ваш базовый шаблон #}
+{% load i18n %} {# Для переводов, если используете #}
+
+{% block content %}
+  <h2>{% trans "Создание нового контрагента" %}</h2>
+
+  {# Вся форма должна быть обернута в тег <form> #}
+  <form method="post" novalidate> {# novalidate отключает стандартную HTML5 валидацию #}
+      {% csrf_token %} {# Обязательный токен безопасности Django #}
+
+      {# 1. Форма выбора типа контрагента (она всегда видна) #}
+      {# Предполагаем, что в контексте view есть словарь 'forms' #}
+      {# который содержит 'type_form', 'legal_form' и т.д. #}
+      <div class="form-group">
+          {{ forms.type_form.company_type.label_tag }}
+          {{ forms.type_form.company_type }}
+          {% if forms.type_form.company_type.errors %}
+              <div class="invalid-feedback d-block"> {# Пример отображения ошибок Bootstrap #}
+                  {{ forms.type_form.company_type.errors|striptags }}
+              </div>
+          {% endif %}
+          <small class="form-text text-muted">{{ forms.type_form.company_type.help_text }}</small>
+      </div>
+      <hr> {# Разделитель для наглядности #}
+
+
+      {# 2. Скрытые по умолчанию секции с полями для каждого типа профиля #}
+
+      {# Секция для Юридического лица #}
+      <div id="legal-entity-fields" class="profile-fields" style="display: none;">
+          <h3>{% trans "Реквизиты юридического лица" %}</h3>
+          {# Вывод не полейных ошибок формы #}
+          {% if forms.legal_form.non_field_errors %}
+              <div class="alert alert-danger">
+                  {{ forms.legal_form.non_field_errors }}
+              </div>
+          {% endif %}
+          {# Вывод полей формы, можно использовать as_p, as_ul, as_table или рендерить вручную #}
+          {{ forms.legal_form.as_p }}
+      </div>
+
+      {# Секция для Индивидуального предпринимателя #}
+      <div id="sole-prop-fields" class="profile-fields" style="display: none;">
+          <h3>{% trans "Реквизиты индивидуального предпринимателя" %}</h3>
+          {% if forms.individual_form.non_field_errors %}
+              <div class="alert alert-danger">
+                  {{ forms.individual_form.non_field_errors }}
+              </div>
+          {% endif %}
+          {{ forms.individual_form.as_p }}
+      </div>
+
+      {# Секция для Физического лица #}
+      <div id="individual-fields" class="profile-fields" style="display: none;">
+          <h3>{% trans "Данные физического лица" %}</h3>
+          {% if forms.person_form.non_field_errors %}
+              <div class="alert alert-danger">
+                  {{ forms.person_form.non_field_errors }}
+              </div>
+          {% endif %}
+          {{ forms.person_form.as_p }}
+      </div>
+
+      {# 3. Кнопка отправки формы (находится внутри тега <form>) #}
+      <hr>
+      <button type="submit" class="btn btn-primary">{% trans "Создать" %}</button>
+
+  </form> {# Закрываем тег <form> #}
+
+  {# 4. JavaScript для переключения видимости секций #}
+  <script>
+    const typeSelector = document.getElementById('id_company_type_selector'); // Убедитесь, что ID поля выбора типа совпадает
+    const profileSections = {
+      'Legal': document.getElementById('legal-entity-fields'),
+      'Individual': document.getElementById('sole-prop-fields'),
+      'Person': document.getElementById('individual-fields')
+      // Добавьте другие типы, если они есть
+    };
+
+    function toggleProfileFields() {
+      const selectedType = typeSelector ? typeSelector.value : null;
+
+      // Скрыть все секции профилей
+      document.querySelectorAll('.profile-fields').forEach(div => {
+        if (div) { // Проверка на случай, если элемент не найден
+            div.style.display = 'none';
+        }
+      });
+
+      // Показать нужную секцию, если тип выбран и секция найдена
+      if (selectedType && profileSections[selectedType]) {
+        profileSections[selectedType].style.display = 'block';
+      }
+    }
+
+    // Добавляем обработчик событий только если селектор найден
+    if (typeSelector) {
+        // Вызываем функцию при загрузке страницы, чтобы установить правильное состояние
+        // (особенно важно при ошибках валидации, когда страница перезагружается с данными)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Пытаемся получить тип, который был выбран до ошибки валидации
+            // Передаем его из контекста view (см. POST-обработчик в CreateView при ошибке)
+            const initialType = "{{ selected_type|default:'' }}"; // 'selected_type' передается из view при ошибке
+
+            if (initialType && typeSelector.value === initialType) {
+                 toggleProfileFields();
+            } else if (typeSelector.value) {
+                 // Если селектор уже имеет значение (например, браузер запомнил или была ошибка)
+                 toggleProfileFields();
+            } else {
+                 // Если тип не выбран, скрываем все по умолчанию
+                 toggleProfileFields(); // Вызов скроет все, так как selectedType будет пуст
+            }
+        });
+
+        // Вызываем функцию при изменении значения в селекторе
+        typeSelector.addEventListener('change', toggleProfileFields);
+    } else {
+        console.warn("Элемент выбора типа компании ('id_company_type_selector') не найден.");
+    }
+  </script>
+
+{% endblock %}

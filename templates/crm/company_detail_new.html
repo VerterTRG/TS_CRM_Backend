@@ -1,0 +1,140 @@
+{# crm/company/company_detail.html или ваш путь #}
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Контрагент" %}: {{ company.display_name|default:company.pk }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    {# Отображаем имя/название контрагента #}
+    <h1>{{ company.display_name|default:"Контрагент ID:" }} </h1>
+    <hr>
+
+    {# --- Общая информация из модели Company --- #}
+    <div class="card mb-4">
+        <div class="card-header">
+            {% trans "Общая информация" %}
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0"> {# Используем Definition List для пар ключ-значение #}
+                <dt class="col-sm-3">{% trans "Тип контрагента" %}:</dt>
+                <dd class="col-sm-9">{{ company.get_company_type_display }}</dd> {# Удобный метод Django #}
+
+                <dt class="col-sm-3">{% trans "Дата добавления" %}:</dt>
+                <dd class="col-sm-9">{{ company.created_at|date:"d.m.Y H:i:s" }}</dd> {# Форматируем дату #}
+
+                <dt class="col-sm-3">{% trans "Последнее обновление" %}:</dt>
+                <dd class="col-sm-9">{{ company.updated_at|date:"d.m.Y H:i:s" }}</dd>
+
+                {# Сюда можно добавить отображение других ОБЩИХ полей из модели Company, если они есть #}
+                {# Например, email или phone, если вы их добавили в Company #}
+                
+                <dt class="col-sm-3">{% trans "Email" %}:</dt>
+                <dd class="col-sm-9">{{ company.email|default:"-" }}</dd>
+
+                <dt class="col-sm-3">{% trans "Телефон" %}:</dt>
+                <dd class="col-sm-9">{{ company.phone|default:"-" }}</dd>
+                
+            </dl>
+        </div>
+    </div>
+
+    {# --- Детальная информация из Профиля --- #}
+    {# Получаем профиль один раз с помощью хелпера #}
+    {% with profile=company.get_profile %}
+        {% if profile %} {# Убедимся, что профиль существует #}
+            <div class="card mb-4">
+                <div class="card-header">
+                    {% trans "Реквизиты и данные" %}
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+
+                        {# --- Поля для Юридического лица --- #}
+                        {% if company.company_type == 'Legal' %} {# Сравниваем со значением из CompanyType.choices #}
+                            <dt class="col-sm-4">{% trans "Краткое наименование" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.name|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "Полное наименование" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.full_name|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "ИНН" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.inn|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "КПП" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.kpp|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "ОГРН" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.ogrn|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "Юридический адрес" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.address|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "ФИО руководителя" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.director|default:"-" }}</dd>
+
+                        {# --- Поля для Индивидуального предпринимателя --- #}
+                        {% elif company.company_type == 'Individual' %}
+                            <dt class="col-sm-4">{% trans "ФИО Индивидуального предпринимателя" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.full_name|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "ИНН" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.inn|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "ОГРНИП" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.ogrnip|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "Адрес регистрации" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.address|default:"-" }}</dd>
+
+                        {# --- Поля для Физического лица --- #}
+                        {% elif company.company_type == 'Person' %}
+                            <dt class="col-sm-4">{% trans "ФИО Физического лица" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.formal_name|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "ИНН физ. лица (если есть)" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.personal_id|default:"-" }}</dd>
+
+                            <dt class="col-sm-4">{% trans "Адрес регистрации/проживания" %}:</dt>
+                            <dd class="col-sm-8">{{ profile.address|default:"-" }}</dd>
+
+                            {# Сюда можно добавить другие поля физ. лица, если они есть #}
+                            {# Например, паспортные данные, если вы решили их хранить (с осторожностью!) #}
+
+                        {% endif %}
+
+                         {# Сюда можно добавить поля, которые есть ВО ВСЕХ или НЕСКОЛЬКИХ профилях, если такие общие поля были вынесены в профили #}
+
+                    </dl>
+                </div>
+            </div>
+        {% else %}
+            {# Сообщение, если профиль по какой-то причине отсутствует #}
+            <div class="alert alert-warning" role="alert">
+                {% trans "Подробная информация (профиль) для этого контрагента отсутствует." %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+
+    {# --- Кнопки действий --- #}
+    <div class="mt-3">
+        <a href="{% url 'company-list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> {% trans "К списку" %} {# Пример иконки FontAwesome #}
+        </a>
+        <a href="{% url 'company-update' pk=company.pk %}" class="btn btn-warning ms-2">
+            <i class="fas fa-edit"></i> {% trans "Редактировать" %}
+        </a>
+        {# Пример кнопки удаления с подтверждением #}
+        <form method="post" action="{% url 'company-delete' pk=company.pk %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger ms-2" onclick="return confirm(`{% trans 'Вы уверены, что хотите удалить этого контрагента?'|escapejs %}`)">
+                <i class="fas fa-trash-alt"></i> {% trans "Удалить" %}
+            </button>
+        </form>
+    </div>
+
+</div> {# end container #}
+
+{% endblock %}

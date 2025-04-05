@@ -14,7 +14,7 @@ class Assignment(models.Model):
     driver = models.ForeignKey(Driver, 
                                null=True, 
                                blank=False,
-                               on_delete=models.SET_NULL,
+                               on_delete=models.PROTECT,
                                verbose_name="Водитель")
     truck = models.ForeignKey(Truck, 
                               null=True, 
