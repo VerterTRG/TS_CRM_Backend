@@ -1,12 +1,9 @@
-from collections.abc import Mapping
-from typing import Any
 from django import forms
 from django.core.files.base import File
 from django.db.models.base import Model
 from django.forms.models import inlineformset_factory
 from django.forms.utils import ErrorList
 from .models import Company, Business
-from django.core.validators import RegexValidator
 
 def add_model_validators_to_form_field(form_field, model_field):
     # Добавляем валидаторы, определенные в модели, к полю формы
