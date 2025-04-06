@@ -5,10 +5,12 @@ from django.views.generic import DetailView, UpdateView, ListView, DeleteView
 from django.urls import reverse_lazy
 from django.db import transaction # Для атомарного сохранения Company + Profile
 from django.http import HttpResponseBadRequest
+from django.contrib import messages # Импортируем для сообщений пользователю
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Company, Business
 from .forms import (
-    CompanyTypeForm, LegalEntityProfileForm, IndividualProfileForm, PersonProfileForm, CompanyCreateForm
+    CompanyForm, CompanyTypeForm, LegalEntityProfileForm, IndividualProfileForm, PersonProfileForm, CompanyCreateForm
 )
 
 class CompanyListView(ListView):
@@ -28,60 +30,84 @@ class CompanyDetailView(DetailView):
         )
 
 # --- Создание контрагента ---
-class CompanyCreateView(View):
+class CompanyCreateView(LoginRequiredMixin, View):
     template_name = 'crm/company_form_new.html' # Укажите свой путь
 
     def get(self, request, *args, **kwargs):
-        # Передаем все формы в шаблон для рендеринга (JS будет их скрывать/показывать)
-        forms_container = CompanyCreateForm()
-        context = {'forms': forms_container.get_all_forms()}
+        # Создаем пустой контейнер для первого отображения формы
+        form_container = CompanyCreateForm()
+        # Передаем словарь форм в контекст
+        context = {'forms': form_container.get_all_forms()}
         return render(request, self.template_name, context)
 
-    @transaction.atomic # Гарантируем, что Company и Profile сохранятся вместе или никак
+    @transaction.atomic # Оставляем транзакцию для атомарности
     def post(self, request, *args, **kwargs):
-        # 1. Получаем выбранный тип
-        type_form = CompanyTypeForm(request.POST)
-        if not type_form.is_valid():
-            # Если тип не выбран или невалиден - ошибка
-            forms_container = CompanyCreateForm(request.POST) # Передаем данные для отображения ошибок
-            context = {'forms': forms_container.get_all_forms()}
-            # Можно добавить сообщение об ошибке
-            return render(request, self.template_name, context, status=400)
+        # 1. Создаем ОДИН экземпляр контейнера со всеми данными из POST
+        # Префиксы, указанные в __init__ контейнера, помогут Django
+        # правильно разобрать данные по формам
+        form_container = CompanyCreateForm(request.POST)
 
-        company_type = type_form.cleaned_data['company_type']
-
-        # 2. Создаем экземпляр Company
-        company = Company(company_type=company_type)
-        # Здесь можно добавить сохранение общих полей из request.POST, если они есть
-
-        # 3. Инициализируем и валидируем нужную форму профиля
-        profile_form = None
-        if company_type == Business.Types.Legal:
-            profile_form = LegalEntityProfileForm(request.POST, prefix='legal')
-        elif company_type == Business.Types.Individual:
-            profile_form = IndividualProfileForm(request.POST, prefix='sole')
-        elif company_type == Business.Types.Person:
-            profile_form = PersonProfileForm(request.POST, prefix='ind')
+        # 2. Определяем выбранный тип компании
+        # Лучше взять его из данных формы выбора типа внутри контейнера
+        selected_company_type = None
+        # Сначала проверим валидность самой формы выбора типа
+        if form_container.type_form.is_valid():
+             selected_company_type = form_container.type_form.cleaned_data.get('company_type')
         else:
-            # Неизвестный тип - ошибка
-             return HttpResponseBadRequest("Invalid company type selected.")
+             # Если тип не выбран или невалиден - сразу рендерим форму с ошибкой
+             messages.error(request, "Пожалуйста, выберите корректный тип контрагента.")
+             context = {'forms': form_container.get_all_forms()}
+             return render(request, self.template_name, context, status=400)
 
-        if profile_form and profile_form.is_valid():
-            # Сохраняем Company только если форма профиля валидна
-            company.save()
-            # Сохраняем профиль, связывая его с Company
-            profile = profile_form.save(commit=False)
-            profile.company = company # Устанавливаем связь
-            profile.save()
-            return redirect(reverse_lazy('company-detail', kwargs={'pk': company.pk})) # Или на список
+        # Если тип не определился (хотя is_valid прошел?), на всякий случай
+        if not selected_company_type:
+             messages.error(request, "Не удалось определить тип контрагента.")
+             context = {'forms': form_container.get_all_forms()}
+             return render(request, self.template_name, context, status=400)
+
+        # 3. Валидируем контейнер
+        # Метод is_valid контейнера должен вызывать is_valid() для company_form
+        # и для нужной формы профиля (legal_form, individual_form или person_form)
+        if form_container.is_valid(selected_company_type):
+            # 4. Сохраняем базовую компанию
+            # Используем company_form из контейнера
+            try:
+                company = form_container.company_form.save(commit=False)
+                # Устанавливаем тип компании (он не был полем в CompanyForm)
+                company.company_type = selected_company_type
+                company.save() # Сохраняем Company в БД
+
+                # 5. Сохраняем связанный профиль
+                # Используем get_profile_form для получения нужной формы из контейнера
+                profile_form = form_container.get_profile_form(selected_company_type)
+                if profile_form: # Убедимся, что форма профиля найдена
+                    profile = profile_form.save(commit=False)
+                    profile.company = company # Устанавливаем связь с созданной Company
+                    profile.save() # Сохраняем профиль в БД
+                else:
+                    # Этого не должно произойти, если is_valid прошел, но для безопасности
+                    raise ValueError("Не удалось найти форму профиля для указанного типа.")
+
+                # 6. Опционально: Добавляем сообщение об успехе
+                messages.success(request, f"Контрагент '{company.name}' успешно создан.")
+
+                # 7. Перенаправляем на страницу успеха (замените 'crm:company_list' на ваш URL)
+                return redirect('crm:company-list') # TODO: Укажите правильный URL name
+
+            except Exception as e:
+                # Ловим возможные ошибки при сохранении
+                messages.error(request, f"Произошла ошибка при сохранении: {e}")
+                # Возвращаем пользователя к форме с данными, но без сохранения
+                context = {'forms': form_container.get_all_forms()}
+                return render(request, self.template_name, context, status=500)
+
         else:
-            # Если форма профиля не валидна, рендерим страницу заново со всеми ошибками
-            forms_container = CompanyCreateForm(request.POST)
-            context = {
-                'forms': forms_container.get_all_forms(),
-                'selected_type': company_type # Передаем выбранный тип для JS
-            }
-            return render(request, self.template_name, context, status=400)
+            # 8. Если валидация контейнера не прошла
+            # Просто рендерим шаблон снова. Экземпляр form_container уже содержит
+            # все нужные формы с данными И ошибками валидации.
+            messages.error(request, "Пожалуйста, исправьте ошибки в форме.")
+            context = {'forms': form_container.get_all_forms()}
+            return render(request, self.template_name, context, status=400) # Bad request
 
 
 # --- Редактирование контрагента ---

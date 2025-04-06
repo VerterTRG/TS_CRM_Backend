@@ -12,7 +12,7 @@ class CustomUser(AbstractUser):
 
     # Если используете email как основной логин вместо username:
     # USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username'] # Или пустой список, если username не нужен
+    REQUIRED_FIELDS = [] # Или пустой список, если email не нужен
 
     def __str__(self):
         return self.username # или email если он основной

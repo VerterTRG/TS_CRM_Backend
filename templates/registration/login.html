@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход в систему</title>
+    {# Здесь можно подключить CSS фреймворки, например Bootstrap #}
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .errorlist { color: red; list-style-type: none; padding: 0; margin: 5px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="text"], input[type="password"] { width: 250px; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h2>Вход в систему</h2>
+
+    {# Отображение не полейных ошибок формы (например, "Неверный логин или пароль") #}
+    {% if form.non_field_errors %}
+        <div class="errorlist">
+            {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {# Скрытое поле для редиректа после входа (если используется LoginRequiredMixin) #}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div>
+            {{ form.username.label_tag }} {# Используем email если он USERNAME_FIELD #}
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="errorlist">{{ form.username.errors|striptags }}</div>
+            {% endif %}
+        </div>
+        <div>
+            {{ form.password.label_tag }}
+            {{ form.password }}
+            {% if form.password.errors %}
+                <div class="errorlist">{{ form.password.errors|striptags }}</div>
+            {% endif %}
+        </div>
+        <br>
+        <button type="submit">Войти</button>
+    </form>
+
+    {# Опционально: Ссылка на сброс пароля #}
+    <p><a href="{% url 'password_reset' %}">Забыли пароль?</a></p>
+
+</body>
+</html>

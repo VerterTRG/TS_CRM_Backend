@@ -31,16 +31,22 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',          # Для доступа через http://localhost:8000
+    '127.0.0.1',          # Для доступа через http://127.0.0.1:8000
+    '.127.0.0.1.nip.io',  # <--- Разрешает ЛЮБОЙ субдомен для 127.0.0.1.nip.io
+                           # Точка в начале означает wildcard (любой субдомен)
+    # При развертывании на продакшене сюда нужно будет добавить
+    # ваш реальный домен, например: '.mydomain.com', 'mydomain.com'
+]
 
 
 # Application definition
 
-SHARED_APP = [
+SHARED_APPS = [
     'django_tenants',
     'customers',
 
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -56,13 +62,14 @@ SHARED_APP = [
 ]
 
 TENANT_APPS = [
+    'django.contrib.admin',
     'roles',
     'crm',
     'logistic',
     'contacts',
 ]
 
-NSTALLED_APPS = SHARED_APP + [app for app in TENANT_APPS if app not in SHARED_APP]
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 MIDDLEWARE = [
     # 'django_tenants.middleware.main.TenantMainMiddleware', № использовать для идентификации по host/URL
@@ -78,6 +85,19 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'dev.urls'
+
+# URL, на который будут перенаправляться пользователи, если они попытаются
+# получить доступ к странице, требующей входа (используется LoginRequiredMixin)
+LOGIN_URL = 'login' # Используем имя URL-паттерна 'login'
+
+# URL, на который пользователь будет перенаправлен ПОСЛЕ УСПЕШНОГО ВХОДА,
+# если в запросе не был указан параметр 'next'.
+# Замените 'dashboard' на имя URL вашей основной страницы после входа.
+LOGIN_REDIRECT_URL = 'dashboard' # TODO: Замените на имя вашего URL
+
+# URL, на который пользователь будет перенаправлен ПОСЛЕ ВЫХОДА.
+# Часто это главная страница или страница входа.
+LOGOUT_REDIRECT_URL = 'login' # Перенаправляем обратно на страницу входа
 
 TEMPLATES = [
     {

@@ -2,6 +2,8 @@ from django.urls import path
 # from .views import Home, CompanyCreateView, CompanyListView, CompanyDetail
 from .views import CompanyListView, CompanyDetailView, CompanyCreateView, CompanyUpdateView, CompanyDeleteView  
 
+app_name = 'crm'
+
 urlpatterns = [
     # ... другие URL-конфигурации ...
     # path('', Home.as_view(), name='Home'),

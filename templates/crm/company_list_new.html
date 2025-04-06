@@ -9,7 +9,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>{% trans "Список контрагентов" %}</h1>
         {# Ссылка на страницу создания нового контрагента #}
-        <a href="{% url 'company-create' %}" class="btn btn-primary">{% trans "Добавить контрагента" %}</a>
+        <a href="{% url 'crm:company-create' %}" class="btn btn-primary">{% trans "Добавить контрагента" %}</a>
     </div>
 
     {# Проверяем, есть ли контрагенты в списке #}
@@ -31,7 +31,7 @@
                         {# Используем display_name для отображения имени/названия #}
                         {# Ссылка ведет на детальную страницу контрагента #}
                         <td>
-                            <a href="{% url 'company-detail' pk=company.pk %}">
+                            <a href="{% url 'crm:company-detail' pk=company.pk %}">
                                 {{ company.display_name|default:"(Имя не указано)" }}
                             </a>
                         </td>
@@ -41,10 +41,10 @@
                         <td>{{ company.created_at|date:"d.m.Y H:i" }}</td>
                         {# Ссылки на просмотр и редактирование #}
                         <td>
-                            <a href="{% url 'company-detail' pk=company.pk %}" class="btn btn-sm btn-info">{% trans "Просмотр" %}</a>
-                            <a href="{% url 'company-update' pk=company.pk %}" class="btn btn-sm btn-warning ms-1">{% trans "Редактировать" %}</a>
+                            <a href="{% url 'crm:company-detail' pk=company.pk %}" class="btn btn-sm btn-info">{% trans "Просмотр" %}</a>
+                            <a href="{% url 'crm:company-update' pk=company.pk %}" class="btn btn-sm btn-warning ms-1">{% trans "Редактировать" %}</a>
                             {# Сюда можно добавить кнопку удаления, если нужно #}
-                            {# <a href="{% url 'company-delete' pk=company.pk %}" class="btn btn-sm btn-danger ms-1">{% trans "Удалить" %}</a> #}
+                            {# <a href="{% url 'crm:company-delete' pk=company.pk %}" class="btn btn-sm btn-danger ms-1">{% trans "Удалить" %}</a> #}
                         </td>
                     </tr>
                     {% endfor %}

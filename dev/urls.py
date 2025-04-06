@@ -7,8 +7,12 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Добавляем стандартные URL'ы аутентификации Django
+    # Они будут доступны по префиксу /accounts/ (например, /accounts/login/, /accounts/logout/)
+    path('accounts/', include('django.contrib.auth.urls')),
     path("schema/", Schema.as_view()),
     path("", include('crm.urls')),
+    
     
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     # Optional UI:

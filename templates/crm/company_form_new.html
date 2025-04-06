@@ -23,6 +23,22 @@
       </div>
       <hr> {# Разделитель для наглядности #}
 
+      {# 1.1 Поле НАИМЕНОВАНИЯ Компании (из новой CompanyForm) - всегда видно #}
+      {# Обращаемся к 'company_form' в словаре 'forms' #}
+      <div class="form-group mb-3"> {# Добавил mb-3 для небольшого отступа снизу #}
+          {{ forms.company_form.name.label_tag }} {# Рендерим <label> #}
+          {# Рендерим поле ввода <input>, Django подставит нужный виджет #}
+          {{ forms.company_form.name }}
+          {# Блок для отображения ошибок валидации для этого поля #}
+          {% if forms.company_form.name.errors %}
+              <div class="invalid-feedback d-block"> {# Пример отображения ошибок Bootstrap #}
+                  {{ forms.company_form.name.errors|striptags }}
+              </div>
+          {% endif %}
+          {# Рендерим вспомогательный текст для поля, если он есть #}
+          <small class="form-text text-muted">{{ forms.company_form.name.help_text }}</small>
+      </div>
+
 
       {# 2. Скрытые по умолчанию секции с полями для каждого типа профиля #}
 

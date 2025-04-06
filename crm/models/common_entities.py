@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 # from crm.models import User # 'auth.User ???'
@@ -19,7 +20,7 @@ class AbstractEntity(models.Model):
                                 )
     # creator
     inCharge     = models.ForeignKey(
-                                'crm.User', # TODO: Should be asign app's user when it's be done 'users.User'
+                                settings.AUTH_USER_MODEL, # TODO: Should be asign app's user when it's be done 'users.User'
                                 null=True,
                                 on_delete=models.SET_NULL,
                                 verbose_name="Ответственный",                            
