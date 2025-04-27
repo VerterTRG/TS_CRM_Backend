@@ -16,3 +16,14 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username # или email если он основной
+    
+    @property
+    def client_name(self) -> str | None: # Указываем тип для подсказок
+        if self.client:
+            return self.client.name
+        return None # Возвращаем None, если клиент не привязан
+    
+    @property
+    def schema_name(self) -> str | None:
+        # Убедитесь, что у модели Client есть поле 'schema_name'
+        return self.client.schema_name if self.client else None

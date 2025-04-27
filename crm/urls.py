@@ -1,6 +1,6 @@
 from django.urls import path
 # from .views import Home, CompanyCreateView, CompanyListView, CompanyDetail
-from .views import CompanyListView, CompanyDetailView, CompanyCreateView, CompanyUpdateView, CompanyDeleteView  
+from .views import CompanyListView, CompanyDetailView, CompanyCreateView, CompanyUpdateView, CompanyDeleteView
 
 app_name = 'crm'
 

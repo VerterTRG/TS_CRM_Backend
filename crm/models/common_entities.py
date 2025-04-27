@@ -7,7 +7,7 @@ class AbstractEntity(models.Model):
 
     name        = models.CharField(max_length=150, blank=False, verbose_name="Наименование")
 
-    isGroup     = models.BooleanField(default=False, verbose_name="Группа")
+    is_group     = models.BooleanField(default=False, verbose_name="Группа")
 
     parent      = models.ForeignKey(
                                 'self', 
@@ -19,7 +19,7 @@ class AbstractEntity(models.Model):
                                 # related_query_name="parent"
                                 )
     # creator
-    inCharge     = models.ForeignKey(
+    in_charge     = models.ForeignKey(
                                 settings.AUTH_USER_MODEL, # TODO: Should be asign app's user when it's be done 'users.User'
                                 null=True,
                                 on_delete=models.SET_NULL,
@@ -32,12 +32,12 @@ class AbstractEntity(models.Model):
     def __str__(self):
         return self.name
     
-    def __save__(self, *args, **kwargs):
-        self.save(*args, **kwargs)
+    # def __save__(self, *args, **kwargs):
+    #     self.save(*args, **kwargs)
 
     # TODO: Should be created a common util or service to get absolut url by main model
     def get_absolute_url(self):
-        if self.isGroup:
+        if self.is_group:
             return reverse('list-company') + f'?parent={self.pk}'
         return reverse('detail-company', kwargs={'pk': self.pk})
     

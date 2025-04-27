@@ -1,8 +1,10 @@
 from django.urls import path
-from .api import api
+
+
+app_name = 'contacts'
 
 urlpatterns = [
     # ... другие URL-конфигурации ...
-    path('', api.urls),
+    # path('', api.urls),
  
 ]

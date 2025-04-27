@@ -1,8 +1,8 @@
 from django.db import models
-from crm.models.common_business_entities import AbstractBusinessEntity
+from crm.models.common_business_entities import BaseCompany
 
 # UL, IP, FL, SE (self employed)
-class Company(AbstractBusinessEntity):
+class Company(BaseCompany):
 
     # name, is_group, parent, in_charge, typeOfBusiness, inn, info
     class Meta:
@@ -11,8 +11,8 @@ class Company(AbstractBusinessEntity):
         verbose_name_plural = ("Контрагенты")
 
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     super().save(*args, **kwargs)
 
 
 

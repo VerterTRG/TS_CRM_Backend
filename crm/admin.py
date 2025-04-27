@@ -20,7 +20,7 @@ class PersonInline(admin.StackedInline):
     verbose_name_plural = 'person'
 
 class CompanyAdmin(admin.ModelAdmin):
-    fields = ['name', 'isGroup', 'parent', 'inCharge', 'typeOfBusiness',]
+    fields = ['name', 'is_group', 'parent', 'in_charge', 'typeOfBusiness',]
     inlines = [
         LegalInline,
         IndividualInline,

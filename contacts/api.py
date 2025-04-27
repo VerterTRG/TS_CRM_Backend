@@ -1,15 +1,13 @@
 
 from typing import Annotated, Optional, List
 from contacts.models import Contact
-from ninja import NinjaAPI, ModelSchema, Schema, Redoc, Swagger, Form, Query
+from ninja import Router, Schema, Redoc, Swagger
 from ninja.orm import create_schema
 
 
-# api = NinjaAPI(docs=Redoc())
-api = NinjaAPI(docs=Swagger())
-# api = NinjaAPI()
+router = Router()
 
-@api.get("/hello")
+@router.get("/hello")
 def hello(request):
     return "Hello world"
 
@@ -25,7 +23,7 @@ def hello(request):
 
 ContactSchema = create_schema(Contact)
 
-@api.get("/", response=List[ContactSchema])
+@router.get("/list", response=List[ContactSchema])
 async def get_contact_list(request):
     # Асинхронно итерируем queryset и собираем объекты в список
     contacts_list = [contact async for contact in Contact.objects.all()] 
@@ -35,7 +33,7 @@ async def get_contact_list(request):
 
 
 
-@api.post("/new")
+@router.post("/new")
 async def create_contact(request, data: ContactSchema): # type: ignore
     
     contact = await Contact.objects.acreate(**data.dict())
@@ -49,7 +47,7 @@ class STaskAdd(Schema):
 class STask(STaskAdd):
     id: int
 
-@api.post('/task')
+@router.post('/task')
 async def add_task(request, task: STaskAdd):
     print(task.name, task.description)
     return {'ok': 200}

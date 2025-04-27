@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Service UTIL's
+# TODO: Before commit you need to hide auth cridantionals, URL's etc
+rav.yaml
+
 # Distribution / packaging
 .Python
 build/

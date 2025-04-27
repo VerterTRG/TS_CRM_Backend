@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -53,6 +54,9 @@ SHARED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'ninja_extra',
+    'ninja_jwt',
+    "corsheaders",
     'schema_graph',
     'rest_framework',
     'drf_spectacular',
@@ -75,6 +79,7 @@ MIDDLEWARE = [
     # 'django_tenants.middleware.main.TenantMainMiddleware', № использовать для идентификации по host/URL
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -85,6 +90,14 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'dev.urls'
+
+
+CORS_URLS_REGEX = r"^/api/.*$" # https://pypi.org/project/django-cors-headers/
+CORS_ALLOWED_ORIGINS = [
+
+    "http://localhost:3000", # next js
+    "http://127.0.0.1:3000", # next js
+]
 
 # URL, на который будут перенаправляться пользователи, если они попытаются
 # получить доступ к странице, требующей входа (используется LoginRequiredMixin)
@@ -199,29 +212,98 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-LOGGING = {
-    'version': 1,
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        }
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
-        }
-    },
-    'loggers': {
-        'django.db.backends': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        }
-    }
-}
+# LOGGING = {
+#     'version': 1,
+#     'filters': {
+#         'require_debug_true': {
+#             '()': 'django.utils.log.RequireDebugTrue',
+#         }
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'filters': ['require_debug_true'],
+#             'class': 'logging.StreamHandler',
+#         }
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'level': 'DEBUG',
+#             'handlers': ['console'],
+#         }
+#     }
+# }
 
 REST_FRAMEWORK = {
     # YOUR SETTINGS
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+NINJA_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+}
+
+LOGGING = {
+    'version': 1, # Версия схемы конфигурации (обязательно)
+    'disable_existing_loggers': False, # Важно оставить False, чтобы не сломать логи Django/сторонних библиотек
+    # --- Форматтеры: Определяют, как будет выглядеть сообщение в логе ---
+    'formatters': {
+        'verbose': { # Подробный формат
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{', # Стиль форматирования (используем f-string стиль)
+        },
+        'simple': { # Простой формат
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    # --- Обработчики (Handlers): Определяют, КУДА отправлять сообщения ---
+    'handlers': {
+        'console': { # Имя обработчика для вывода в консоль
+            'level': 'DEBUG',       # Минимальный уровень сообщений для ЭТОГО обработчика (можно INFO, WARNING)
+            'class': 'logging.StreamHandler', # Класс для вывода в поток (stderr/stdout)
+            'formatter': 'simple',  # Имя форматтера, который использовать
+        },
+        # --- Пример обработчика для записи в файл (раскомментируйте, если нужно) ---
+        # 'file_all': {
+        #     'level': 'INFO', # Писать INFO и выше в файл
+        #     'class': 'logging.FileHandler',
+        #     'filename': os.path.join(LOGS_DIR, 'all.log'), # Путь к файлу
+        #     'formatter': 'verbose',
+        # },
+        # 'file_errors': {
+        #     'level': 'ERROR', # Писать только ERROR и CRITICAL в отдельный файл
+        #     'class': 'logging.FileHandler',
+        #     'filename': os.path.join(LOGS_DIR, 'errors.log'),
+        #     'formatter': 'verbose',
+        # },
+    },
+    # --- Логгеры: Определяют, сообщения ОТКУДА и с каким уровнем обрабатывать ---
+    'loggers': {
+        'django': { # Настройка для логгера самого Django
+            'handlers': ['console'], # Куда отправлять сообщения от Django
+            'level': 'INFO',         # Минимальный уровень для сообщений от Django
+            'propagate': True,       # Разрешить передачу сообщений родительским логгерам
+        },
+        'django.request': { # Логгер для ошибок обработки запросов Django
+            'handlers': ['console'], # ['mail_admins'] можно добавить для отправки ошибок на почту
+            'level': 'ERROR',
+            'propagate': False, # Не передавать выше, чтобы не дублировать
+        },
+        # --- Пример настройки для конкретного приложения (например, 'crm') ---
+        # 'crm': {
+        #     'handlers': ['console', 'file_all'], # Отправлять и в консоль, и в файл
+        #     'level': 'DEBUG', # Показывать все сообщения от DEBUG и выше для crm
+        #     'propagate': False, # Не передавать сообщения от crm в 'root' логгер ниже
+        # },
+    },
+    # --- Корневой логгер (Root Logger) ---
+    # Он будет ловить все сообщения, которые не были обработаны специфичными логгерами выше
+    # (если у них propagate=True) ИЛИ все сообщения, если специфичные логгеры не настроены.
+    'root': {
+        'handlers': ['console'], # Указываем обработчик(и) по умолчанию
+        'level': 'WARNING',     # Минимальный уровень для ВСЕХ сообщений, не пойманных выше
+                                # Если хотите видеть DEBUG/INFO ото всюду, поставьте 'DEBUG'/'INFO'
+    },
 }

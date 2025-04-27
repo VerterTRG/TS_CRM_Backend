@@ -4,7 +4,7 @@
 
 {% block content %}
 
-{% if object.isGroup %}
+{% if object.is_group %}
 <h1>Группа {{ object.name }}</h1>
 
 {{ object.children.all }}

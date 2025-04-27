@@ -1,3 +1,4 @@
+from functools import cached_property
 from django.db import models
 from crm.models.common_entities import AbstractEntity
 from crm.globals.validators import create_digits_validator
@@ -24,24 +25,25 @@ class Business:
     class BaseExt(models.Model):
         class Meta:
             abstract = True
-
+        
         formal_name = models.CharField(max_length=255, blank=True, verbose_name="Полное наименование")
         # Reference to bank account
         # History interactions
-    
-    class Legal(BaseExt):
- 
-        inn = models.CharField(max_length=10, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')])
-        kpp = models.CharField(max_length=9, null=True, blank=True, verbose_name="КПП", validators=[create_digits_validator('КПП')])
-        ogrn = models.CharField(max_length=13, null=True, blank=True, verbose_name="ОГРН", validators=[create_digits_validator('ОГРН')])
-
-        company = models.OneToOneField('crm.Company', related_name="legal", on_delete=models.CASCADE, null=True)
 
         def get_display_name(self):
             return self.formal_name
 
         def __str__(self):
             return self.formal_name
+    
+    class Legal(BaseExt):
+        
+        # TODO: Should pay attention about unique and null=True, possibly need to make refactoring
+        inn = models.CharField(max_length=10, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')]) 
+        kpp = models.CharField(max_length=9, null=True, blank=True, verbose_name="КПП", validators=[create_digits_validator('КПП')])
+        ogrn = models.CharField(max_length=13, null=True, blank=True, verbose_name="ОГРН", validators=[create_digits_validator('ОГРН')])
+
+        company = models.OneToOneField('crm.Company', related_name="legal", on_delete=models.CASCADE)
 
         class Meta:
             db_table = "crm_business_legals"
@@ -54,14 +56,7 @@ class Business:
         inn = models.CharField(max_length=12, null=True, blank=True, unique=True, verbose_name="ИНН", validators=[create_digits_validator('ИНН')])
         ogrn = models.CharField(max_length=15, null=True, blank=True, verbose_name="ОГРН", validators=[create_digits_validator('ОГРН')])
 
-        company = models.OneToOneField('crm.Company', related_name="individual", on_delete=models.CASCADE, null=True)
-
-        def get_display_name(self):
-        # Можно добавить префикс для ясности
-            return f"ИП {self.formal_name}"
-
-        def __str__(self):
-            return self.get_display_name()
+        company = models.OneToOneField('crm.Company', related_name="individual", on_delete=models.CASCADE)
 
         class Meta:
             db_table = "crm_business_individuals"
@@ -74,12 +69,6 @@ class Business:
         personal_id = models.CharField(max_length=255, null=True, blank=True, verbose_name="Удостоверение личности")
 
         company = models.OneToOneField('crm.Company', related_name="person", on_delete=models.CASCADE)
-    
-        def get_display_name(self):
-            return self.formal_name
-
-        def __str__(self):
-            return self.formal_name
 
         class Meta:
             db_table = "crm_business_persons"
@@ -96,7 +85,7 @@ class Business:
 
 
 
-class AbstractBusinessEntity(AbstractEntity):
+class BaseCompany(AbstractEntity):
 
     class Meta:
         abstract = True
@@ -104,7 +93,9 @@ class AbstractBusinessEntity(AbstractEntity):
     # name, is_group, parent, in_charge
     company_type = models.CharField(verbose_name="Тип контрагента",
         max_length=10,
-        choices=Business.Types.choices  # Используем определенное перечисление
+        choices=Business.Types.choices,
+        blank=True,
+        null=True  # Используем определенное перечисление
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -112,8 +103,8 @@ class AbstractBusinessEntity(AbstractEntity):
 
     def save(self, *args, **kwargs):
 
-        if  self.isGroup and self.company_type:
-            raise ValueError("Cannot save a group with a type of business specified. [isGroup == True]")
+        if  self.is_group and self.company_type:
+            raise ValueError("Cannot save a group with a type of business specified. [is_group == True]")
         
         super().save(*args, **kwargs)
 
@@ -130,28 +121,22 @@ class AbstractBusinessEntity(AbstractEntity):
             return getattr(self, 'person', None)
         return None # На случай появления новых типов без профиля
 
-    @property
+    @cached_property
     def info(self):
-        if hasattr(self, 'legal'):
-            return self.legal # type: ignore
-        elif hasattr(self, 'individual'):
-            return self.individual # type: ignore
-        elif hasattr(self, 'person'):
-            return self.person # type: ignore
-        return None
+        return self.get_profile()
+        # related_name = self.company_type.lower() if self.company_type else None
+        # return getattr(self, related_name, None) if related_name else None
     
     @property
     def display_name(self):
         """Возвращает имя/название из соответствующего профиля."""
-        profile = self.get_profile()
+        profile = self.info
         if profile:
             # Каждый профиль должен иметь метод/свойство для получения имени
             if hasattr(profile, 'get_display_name'):
                 return profile.get_display_name()
-            elif hasattr(profile, 'name'): # Фолбэк на поле name
-                return profile.name
-            elif hasattr(profile, 'full_name'): # Фолбэк на поле full_name
-                return profile.full_name
+        if self.name:
+            return self.name
         return f"Контрагент ID: {self.id}" # type: ignore # Запасной вариант
 
     def __str__(self):
@@ -180,7 +165,7 @@ class AbstractBusinessEntity(AbstractEntity):
     #         raise ValueError("Недопустимое значение для business_type")
     #     if not self._copy: 
     #         self._copy = self.__dict__.copy()
-    #     # self.__class__ = AbstractBusinessEntity
+    #     # self.__class__ = BaseCompany
     #     self._typeOfBusiness = newType
     #     # self.perform_business_specific_action()
 
