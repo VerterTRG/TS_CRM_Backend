@@ -28,23 +28,26 @@ class PersonInfoSchema(ModelSchema):
 
 class CompanyBaseInputSchema(Schema):
     name: str = Field(...)
-    is_group: Optional[bool] = Field(False, alias="isGroup")
-    parent_id: Optional[int] = Field(None, alias="parentId")
-    in_charge_id: Optional[int] = Field(None, alias="inChargeId")
+    # Убраны alias'ы — ожидаем snake_case в теле запроса (parent_id, is_group, in_charge_id)
+    is_group: Optional[bool] = Field(False)
+    parent: Optional[int] = Field(None)
+    in_charge_id: Optional[int] = Field(None)
 
 class LegalCompanyInputSchema(CompanyBaseInputSchema):
-    company_type: Literal[Business.Types.Legal] = Field(Business.Types.Legal, alias="companyType")
+    # Используем поле company_type без alias — ожидаем "company_type" в JSON
+    company_type: Literal[Business.Types.Legal] = Field(Business.Types.Legal)
     info: LegalInfoSchema # <-- Теперь использует ModelSchema
 class IndividualCompanyInputSchema(CompanyBaseInputSchema):
-    company_type: Literal[Business.Types.Individual] = Field(Business.Types.Individual, alias="companyType")
+    company_type: Literal[Business.Types.Individual] = Field(Business.Types.Individual)
     info: IndividualInfoSchema # <-- Теперь использует ModelSchema
 class PersonCompanyInputSchema(CompanyBaseInputSchema):
-    company_type: Literal[Business.Types.Person] = Field(Business.Types.Person, alias="companyType")
+    company_type: Literal[Business.Types.Person] = Field(Business.Types.Person)
     info: PersonInfoSchema # <-- Теперь использует ModelSchema
 
 class GroupCompanyInputSchema(CompanyBaseInputSchema):
-    is_group: Literal[True] = Field(True, alias="isGroup")
-    company_type: Literal[None] = Field(None, alias="companyType")
+    # Для групп тоже без alias'ов
+    is_group: Literal[True] = Field(True)
+    company_type: Literal[None] = Field(None)
     info: Optional[None] = Field(None)
 
 

@@ -4,7 +4,9 @@ from ninja import Query, Path, Schema, Body, Router
 from ninja_extra import api_controller, route, ControllerBase
 from drf_spectacular.utils import extend_schema
 from ninja.errors import HttpError
-from typing import List
+from typing import List, Optional
+import re
+from django.db import IntegrityError
 
 from ninja_extra import api_controller
 
@@ -30,6 +32,7 @@ def simple_crm_test(request):
 
 class ErrorSchema(Schema):
     detail: str
+    field_errors: Optional[dict] = None
 
 
 
@@ -55,15 +58,28 @@ class CompanyController(ControllerBase):
         """
         try:
             # Вызываем сервис, передаем провалидированные данные
+            print(f"API: Получен запрос на создание {request.body.decode('utf-8')}")
             new_company = create_company(payload)
             # Возвращаем созданный объект, он будет сериализован через CompanyOutputSchema
             return 201, new_company
         except HttpError as e:
             # Перехватываем ожидаемые ошибки от сервиса (400)
             return e.status_code, {"detail": str(e)}
+        except IntegrityError as e:
+            # Пытаемся извлечь поле из сообщения PostgreSQL: "Key (inn)=(123) already exists."
+            msg = str(e)
+            m = re.search(r'Key \((?P<field>[\w_]+)\)=\((?P<value>.+?)\)', msg)
+            if m:
+                field = m.group('field')
+                value = m.group('value')
+                logger.info(f"DB IntegrityError on field {field} value {value}")
+                return 400, {"detail": f"Duplicate value for field '{field}'", "field_errors": {field: "already exists"}}
+            # Если не удалось распарсить — вернуть общий ответ с текстом ошибки
+            logger.exception("IntegrityError при создании Company")
+            return 400, {"detail": "Database integrity error", "field_errors": {"__all__": msg}}
         except Exception as e:
             # Логируем непредвиденные ошибки!
-            print(f"Непредвиденная ошибка API: {e}") # Замените на реальное логирование
+            logger.exception(f"Непредвиденная ошибка API: {e}")
             return 500, {"detail": "Внутренняя ошибка сервера."}
 
     # Добавьте другие эндпоинты (GET list, GET detail, PUT, DELETE) при необходимости

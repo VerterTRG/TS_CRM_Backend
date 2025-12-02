@@ -55,12 +55,12 @@ def create_company(payload: CompanyInputUnion) -> Company:
 
     # 1. Подготовка связанных объектов (Parent, InCharge)
     parent_company = None
-    if payload.parent_id:
+    if payload.parent:
         try:
             # Ищем родителя ТОЛЬКО среди групп
-            parent_company = Company.objects.filter(is_group=True).get(pk=payload.parent_id)
+            parent_company = Company.objects.filter(is_group=True).get(pk=payload.parent)
         except Company.DoesNotExist:
-            raise HttpError(400, f"Родительская группа с ID {payload.parent_id} не найдена.")
+            raise HttpError(400, f"Родительская группа с ID {payload.parent} не найдена.")
 
     in_charge_user = None
     if payload.in_charge_id:
@@ -190,3 +190,4 @@ def validate_ordering_string(ordering_string: str, allowed_fields: set) -> list:
             # Можно здесь генерировать ошибку или просто игнорировать
 
     return validated_fields
+
