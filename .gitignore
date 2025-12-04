@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# macOS
+.DS_Store
+
 # C extensions
 *.so
 
@@ -29,6 +32,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Media files
+media/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -139,7 +145,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-djenv/
+.djenv/
 
 # Spyder project settings
 .spyderproject

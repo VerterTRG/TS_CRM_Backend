@@ -93,7 +93,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'dev.urls'
 
 
-CORS_URLS_REGEX = r"^/api/.*$" # https://pypi.org/project/django-cors-headers/
+CORS_URLS_REGEX = r"^/(api|media)/.*$" # https://pypi.org/project/django-cors-headers/
 CORS_ALLOWED_ORIGINS = [
 
     "http://localhost:3000", # next js
@@ -208,6 +208,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
     # другие пути, если необходимо
 ]
+
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
