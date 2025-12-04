@@ -12,16 +12,18 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 from users.utils.api_auth import TenantAwareJWTAuth
 from users.utils.api_auth_contoller import AuthController
+from users.api import UserController
 
 
 api = NinjaExtraAPI(docs=Swagger(), auth=TenantAwareJWTAuth())
 api.register_controllers(AuthController)
 api.register_controllers(CompanyController)
 api.register_controllers(LogisticController)
+api.register_controllers(UserController)
 
 api.add_router('/contacts', 'contacts.api.router', tags=["Contacts Simple Test"])
 api.add_router('/crm', 'crm.api.router', tags=["CRM Simple Test"])
-api.add_router('/users', 'users.api.router', tags=['Users API'])
+# api.add_router('/users', 'users.api.router', tags=['Users API']) # Replaced by controller
 api.add_router('/logistic', 'logistic.api.router', tags=['Logistic API'])
 
 def redoc_view(request):

@@ -86,6 +86,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
+    'ninja.compatibility.files.fix_request_files_middleware',
     'users.middleware.TenantIdentificationMiddleware'
 ]
 
