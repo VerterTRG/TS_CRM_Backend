@@ -3,7 +3,7 @@ from typing import Optional
 
 class ClientSchema(Schema):
     name: str
-    schema_name: str
+    # schema_name: str
 
 class UserOut(Schema):
     id: int
@@ -13,7 +13,7 @@ class UserOut(Schema):
     email: str
     phone: Optional[str] = None
     logo: Optional[str] = None
-    client: Optional[ClientSchema] = None
+    company: Optional[ClientSchema] = None
     is_staff: bool
     is_active: bool
 

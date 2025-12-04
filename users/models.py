@@ -3,6 +3,9 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from typing import Optional
 from customers.models import Client
+from PIL import Image
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 class CustomUser(AbstractUser):
     """
@@ -40,6 +43,8 @@ class CustomUser(AbstractUser):
         verbose_name="Эл. почта"
     )
     phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон")
+    
+    # Используем ImageField. Pillow автоматически валидирует формат изображения.
     logo = models.ImageField(upload_to='user_logos/', blank=True, null=True, verbose_name="Лого")
 
     # Ссылка на Клиента (Тенант)
@@ -62,6 +67,37 @@ class CustomUser(AbstractUser):
         db_table = 'users'
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
+    def save(self, *args, **kwargs):
+        """Переопределяем save для автоматического ресайза логотипа."""
+        if self.logo:
+            self._resize_logo()
+        super().save(*args, **kwargs)
+
+    def _resize_logo(self):
+        """Уменьшает изображение до 30x30, сохраняя пропорции."""
+        if not self.logo:
+            return
+
+        try:
+            # Открываем изображение через Pillow
+            img = Image.open(self.logo)
+            
+            # Если изображение больше 30x30 по любой из сторон
+            if img.height > 30 or img.width > 30:
+                output_size = (30, 30)
+                img.thumbnail(output_size) # thumbnail вписывает изображение в квадрат, сохраняя пропорции
+                
+                buffer = BytesIO()
+                # Сохраняем формат оригинала (PNG, JPEG и т.д.)
+                img_format = img.format if img.format else 'JPEG'
+                img.save(buffer, format=img_format)
+                
+                # Заменяем файл в поле на обработанную версию
+                self.logo.file = ContentFile(buffer.getvalue(), name=self.logo.name)
+        except Exception:
+            # Если файл битый или не поддерживается, просто пропускаем ресайз
+            pass
 
     def __str__(self) -> str:
         if self.first_name and self.last_name:

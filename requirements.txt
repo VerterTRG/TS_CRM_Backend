@@ -7,6 +7,7 @@ django-tenants==3.9.0
 djangorestframework==3.16.1 # Оставляем, но см. Примечание 1
 django-cors-headers
 drf-spectacular==0.29.0   # Зависит от djangorestframework
+pillow==12.0.0
 
 # Database Driver
 psycopg[binary]   # Была psycopg2-binary==2.9.10

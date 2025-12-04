@@ -20,20 +20,27 @@ class UserController:
         return request.user
 
     @http_put("/me", response=UserOut, summary="Обновить профиль пользователя")
-    def update_me(self, request, payload: UserUpdate = Form(...), logo: UploadedFile = File(None)):
+    def update_me(self, request, payload: UserUpdate):
         """
         Обновляет информацию профиля текущего пользователя.
-        Поддерживает обновление текстовых полей и загрузку логотипа.
+        Принимает стандартный JSON.
         """
         user = request.user
 
         for attr, value in payload.dict(exclude_unset=True).items():
             setattr(user, attr, value)
 
-        if logo:
-            user.logo.save(logo.name, logo, save=False)
-
         user.save()
+        return user
+
+    @http_post("/me/logo-upload", response=UserOut, summary="Обновить аватар")
+    def upload_avatar(self, request, logo: UploadedFile = File(...)): #type: ignore
+        """
+        Отдельный эндпоинт для загрузки аватара (multipart/form-data).
+        """
+        user = request.user
+        # save=True сохранит файл и обновит модель
+        user.logo.save(logo.name, logo, save=True)
         return user
 
     @http_post("/change-password", summary="Сменить пароль")

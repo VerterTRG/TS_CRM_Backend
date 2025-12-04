@@ -2,7 +2,7 @@ from functools import cached_property
 from django.db import models
 from crm.models.common_entities import AbstractEntity
 from crm.globals.validators import create_digits_validator
-from typing import Optional, Any
+from typing import Optional, Any, cast
 
 class Business:
 
@@ -120,10 +120,10 @@ class BaseCompany(AbstractEntity):
         """Возвращает имя/название из соответствующего профиля."""
         profile = self.info
         if profile and hasattr(profile, 'get_display_name'):
-            return profile.get_display_name()
+            return cast(Business.BaseExt, profile).get_display_name()
         if self.name:
             return self.name
-        return f"Контрагент ID: {self.id}"
+        return f"Контрагент ID: {self.pk}"
 
     def __str__(self) -> str:
         return self.display_name
