@@ -1,12 +1,12 @@
 # Core Frameworks / Libraries
-Django
+Django==5.2.7
 django-ninja
 pydantic       # Технически зависимость Ninja, но лучше указать явно
 django-ninja-jwt[crypto]
-django-tenants==3.7.0
-djangorestframework==3.14.0 # Оставляем, но см. Примечание 1
+django-tenants==3.9.0
+djangorestframework==3.16.1 # Оставляем, но см. Примечание 1
 django-cors-headers
-drf-spectacular==0.28.0   # Зависит от djangorestframework
+drf-spectacular==0.29.0   # Зависит от djangorestframework
 
 # Database Driver
 psycopg[binary]   # Была psycopg2-binary==2.9.10

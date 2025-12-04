@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline, GenericStackedInline
 from crm.models.common_business_entities import Business
 
-from crm.models.copmanies import Company
+from crm.models.companies import Company
 
 class LegalInline(admin.StackedInline):
     model = Business.Legal

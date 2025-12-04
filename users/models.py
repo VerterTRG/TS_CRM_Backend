@@ -18,7 +18,7 @@ class CustomUser(AbstractUser):
         return self.username # или email если он основной
     
     @property
-    def client_name(self) -> str | None: # Указываем тип для подсказок
+    def client_name(self) -> str | None:
         if self.client:
             return self.client.name
         return None # Возвращаем None, если клиент не привязан

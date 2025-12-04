@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from ninja import Swagger, NinjaAPI
+from ninja import Swagger, NinjaAPI, Redoc
 from ninja_extra import NinjaExtraAPI
 from ninja_jwt.authentication import JWTAuth
 from crm.api import CompanyController
@@ -24,6 +24,10 @@ api.add_router('/crm', 'crm.api.router', tags=["CRM Simple Test"])
 api.add_router('/users', 'users.api.router', tags=['Users API'])
 api.add_router('/logistic', 'logistic.api.router', tags=['Logistic API'])
 
+def redoc_view(request):
+    # render_page генерирует HTML для Redoc, используя схему вашего api
+    return Redoc().render_page(request, api)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Добавляем стандартные URL'ы аутентификации Django
@@ -37,6 +41,7 @@ urlpatterns = [
     # path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 
     path('api/', api.urls),
+    path("api/redoc/", redoc_view, name='redoc'),
 
     # path("api/logistic/", include(logistic_router.urls)), # DRF
 
