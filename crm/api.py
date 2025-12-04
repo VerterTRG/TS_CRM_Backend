@@ -10,7 +10,7 @@ from django.db import IntegrityError
 
 from ninja_extra import api_controller
 
-from crm.models.copmanies import Company
+from crm.models.companies import Company
 
 from .schemas import CompanyFilterSchema, CompanyInputUnion, CompanyOutputSchema # Наши схемы
 from .services import create_company, get_list_companies # Наш сервис

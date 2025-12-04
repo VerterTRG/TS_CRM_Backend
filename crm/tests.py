@@ -1,8 +1,8 @@
 from django.test import TestCase, override_settings
 from django.db.models import Q
 
-from crm.models.copmanies import Company
-# from models.copmanies import *
+from crm.models.companies import Company
+# from models.companies import *
 
 # class CompanyTestCase(TestCase):
 #     @override_settings(DEBUG=True)

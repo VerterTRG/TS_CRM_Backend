@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 from crm.models.common_business_entities import Business
 
-from crm.models.copmanies import Company
+from crm.models.companies import Company
 from .forms import CompanyForm, IndividualForm, LegalForm, PersonForm #, LegalFormSet, IndividualFormSet, PersonFormSet
 from .services import create_company
 
