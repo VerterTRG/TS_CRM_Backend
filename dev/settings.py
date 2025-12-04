@@ -98,6 +98,8 @@ CORS_ALLOWED_ORIGINS = [
 
     "http://localhost:3000", # next js
     "http://127.0.0.1:3000", # next js
+    "http://localhost:3100", # flutter
+    "http://127.0.0.1:3100", # flutter
 ]
 
 # URL, на который будут перенаправляться пользователи, если они попытаются
