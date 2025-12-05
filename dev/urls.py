@@ -5,7 +5,7 @@ from django.urls import path, include
 from ninja import Swagger, NinjaAPI, Redoc
 from ninja_extra import NinjaExtraAPI
 from ninja_jwt.authentication import JWTAuth
-from crm.api import CompanyController
+from crm.api import CompanyController, AgreementController, AgentController, BankAccountController
 from logistic.api import LogisticController
 from logistic.routers import router as logistic_router
 from schema_graph.views import Schema
@@ -19,6 +19,9 @@ from users.api import UserController
 api = NinjaExtraAPI(docs=Swagger(), auth=TenantAwareJWTAuth())
 api.register_controllers(AuthController)
 api.register_controllers(CompanyController)
+api.register_controllers(AgreementController)
+api.register_controllers(AgentController)
+api.register_controllers(BankAccountController)
 api.register_controllers(LogisticController)
 api.register_controllers(UserController)
 

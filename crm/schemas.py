@@ -1,71 +1,122 @@
 from enum import Enum
-from typing import Annotated, Literal, Optional, Union
-from ninja import Schema, ModelSchema # Импортируем оба
-from pydantic import Field, computed_field
-# ... другие импорты ...
-from .models import Company, Business
+from typing import Annotated, Literal, Optional, Union, List
+from ninja import Schema, ModelSchema
+from pydantic import Field
+from .models import Company, Business, Agreement, Agent, BankAccount
+from contacts.models import Contact
 
-# --- Схемы для ИНФОРМАЦИИ (теперь на ModelSchema) ---
-class LegalInfoSchema(ModelSchema):
-    class Meta:
-        model = Business.Legal
-        # Указываем поля из LegalEntityProfile, нужные в 'info'
-        fields = '__all__' # ['formal_name', 'inn', 'kpp', 'ogrn']
-        exclude = ['id', 'company']
-
-class IndividualInfoSchema(ModelSchema):
-    class Meta:
-        model = Business.Individual
-        fields = '__all__' # ['formal_name', 'inn', 'ogrn'] # Поле ogrn из вашей модели
-        exclude = ['id', 'company']
-
-class PersonInfoSchema(ModelSchema):
-    class Meta:
-        model = Business.Person
-        fields = '__all__' # ['formal_name', 'personal_id']
-        exclude = ['id', 'company']
-
+# --- Input Schemas ---
 
 class CompanyBaseInputSchema(Schema):
     name: str = Field(...)
-    # Убраны alias'ы — ожидаем snake_case в теле запроса (parent_id, is_group, in_charge_id)
     is_group: Optional[bool] = Field(False)
     parent: Optional[int] = Field(None)
     in_charge_id: Optional[int] = Field(None)
 
+    # New fields
+    address: Optional[str] = Field(None)
+    mail_address: Optional[str] = Field(None)
+    comment: Optional[str] = Field(None)
+
+    # Common fields (previously in info schemas)
+    formal_name: Optional[str] = Field(None)
+
 class LegalCompanyInputSchema(CompanyBaseInputSchema):
-    # Используем поле company_type без alias — ожидаем "company_type" в JSON
     company_type: Literal[Business.Types.Legal] = Field(Business.Types.Legal)
-    info: LegalInfoSchema # <-- Теперь использует ModelSchema
+    inn: Optional[str] = Field(None)
+    kpp: Optional[str] = Field(None)
+    ogrn: Optional[str] = Field(None)
+
 class IndividualCompanyInputSchema(CompanyBaseInputSchema):
     company_type: Literal[Business.Types.Individual] = Field(Business.Types.Individual)
-    info: IndividualInfoSchema # <-- Теперь использует ModelSchema
+    inn: Optional[str] = Field(None)
+    ogrn: Optional[str] = Field(None)
+
 class PersonCompanyInputSchema(CompanyBaseInputSchema):
     company_type: Literal[Business.Types.Person] = Field(Business.Types.Person)
-    info: PersonInfoSchema # <-- Теперь использует ModelSchema
+    personal_id: Optional[str] = Field(None)
 
 class GroupCompanyInputSchema(CompanyBaseInputSchema):
-    # Для групп тоже без alias'ов
     is_group: Literal[True] = Field(True)
     company_type: Literal[None] = Field(None)
-    info: Optional[None] = Field(None)
 
-
-# --- Объединенная схема ---
+# Union Schema
 CompanyInputUnion = Annotated[
     Union[GroupCompanyInputSchema, LegalCompanyInputSchema, IndividualCompanyInputSchema, PersonCompanyInputSchema],
-    Field(discriminator='company_type') # или 'companyType', если использовали alias
+    Field(discriminator='company_type')
 ]
 
-# CompanyInputUnion = Union[GroupCompanyInputSchema, LegalCompanyInputSchema, IndividualCompanyInputSchema, PersonCompanyInputSchema]
+# --- Related Models Input/Update Schemas ---
 
-ProfileOutputUnion = Union[LegalInfoSchema, IndividualInfoSchema, PersonInfoSchema, None]
-# --- Схема для ОТВЕТА (здесь ModelSchema идеальна) ---
+class AgreementInputSchema(ModelSchema):
+    company_id: int
+    class Meta:
+        model = Agreement
+        fields = ['number', 'date']
+
+class AgreementUpdateSchema(ModelSchema):
+    class Meta:
+        model = Agreement
+        fields = ['number', 'date', 'company']
+        fields_optional = ['number', 'date', 'company']
+
+class AgentInputSchema(ModelSchema):
+    company_id: int
+    class Meta:
+        model = Agent
+        fields = ['name', 'position', 'authority_doc', 'details']
+
+class AgentUpdateSchema(ModelSchema):
+    class Meta:
+        model = Agent
+        fields = ['name', 'position', 'authority_doc', 'details', 'company']
+        fields_optional = ['name', 'position', 'authority_doc', 'details', 'company']
+
+class BankAccountInputSchema(ModelSchema):
+    company_id: int
+    class Meta:
+        model = BankAccount
+        fields = ['number', 'bank', 'bik', 'cor_number']
+
+class BankAccountUpdateSchema(ModelSchema):
+    class Meta:
+        model = BankAccount
+        fields = ['number', 'bank', 'bik', 'cor_number', 'company']
+        fields_optional = ['number', 'bank', 'bik', 'cor_number', 'company']
+
+# --- Nested Output Schemas ---
+
+class AgreementSchema(ModelSchema):
+    class Meta:
+        model = Agreement
+        fields = ['id', 'number', 'date']
+
+class AgentSchema(ModelSchema):
+    class Meta:
+        model = Agent
+        fields = ['id', 'name', 'position', 'authority_doc', 'details']
+
+class BankAccountSchema(ModelSchema):
+    class Meta:
+        model = BankAccount
+        fields = ['id', 'number', 'bank', 'bik', 'cor_number']
+
+class ContactSchema(ModelSchema):
+    class Meta:
+        model = Contact
+        fields = ['id', 'name', 'phone', 'email', 'comment']
+
+class CompanyDetailsSchema(Schema):
+    bank_accounts: List[BankAccountSchema]
+    contacts: List[ContactSchema]
+    agreements: List[AgreementSchema]
+    agents: List[AgentSchema]
+
+# --- Output Schemas ---
+
 class CompanyOutputSchema(ModelSchema):
-
     class Meta:
         model = Company
-        # Указываем основные поля модели Company.
         fields = [
             'id',
             'name',
@@ -75,32 +126,24 @@ class CompanyOutputSchema(ModelSchema):
             'company_type',
             'created_at',
             'updated_at',
+            'formal_name',
+            'inn',
+            'kpp',
+            'ogrn',
+            'personal_id',
+            'address',
+            'mail_address',
+            'comment',
+            'main_agreement',
+            'representative',
+            'main_bank_account'
         ]
-    
-    # 1. Объявляем поле 'info', которое мы хотим видеть в выводе.
-    info: Optional[dict] = Field(None)
-        
-    
-    # 2. Определяем метод разрешения для поля 'info'.
-    #    Имя метода должно быть 'resolve_' + имя_поля (resolve_info).
-    #    Он принимает 'self' (экземпляр схемы) и 'obj' (экземпляр модели Company).
-    @staticmethod
-    def resolve_info(obj: Company) -> Optional[dict]: # Возвращает dict
-        profile_instance = obj.info
-        # ... (Ваша логика if/elif/else) ...
-        if isinstance(profile_instance, Business.Legal):
-            return LegalInfoSchema.from_orm(profile_instance).model_dump(exclude_unset=True) # Возвращаем dict
-        elif isinstance(profile_instance, Business.Individual):
-             return IndividualInfoSchema.from_orm(profile_instance).model_dump(exclude_unset=True) # Возвращаем dict
-        elif isinstance(profile_instance, Business.Person):
-             return PersonInfoSchema.from_orm(profile_instance).model_dump(exclude_unset=True) # Возвращаем dict
-        else:
-             return None
 
-# Схема для параметров фильтрации (опционально, но хорошо для валидации/Swagger)
+class CompanyFullOutputSchema(CompanyOutputSchema):
+    details: CompanyDetailsSchema
+
 class CompanyFilterSchema(Schema):
     search: Optional[str] = None
-    # company_type: Optional[str] = None # Можно использовать Literal или Enum, если типы известны
     company_type: Optional[Business.Types] = None
     is_group: Optional[bool] = None
-    order_by: Optional[str] = None # Для сортировки
+    order_by: Optional[str] = None
