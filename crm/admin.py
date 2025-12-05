@@ -1,29 +1,37 @@
 from django.contrib import admin
 from crm.models.companies import Company
-from crm.models.common_business_entities import Business
+from crm.models.agreements import Agreement
+from crm.models.agents import Agent
+from crm.models.bank_accounts import BankAccount
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'company_type', 'display_name', 'created_at')
-    search_fields = ('name', 'formal_name')
+    list_display = ('name', 'company_type', 'formal_name', 'inn', 'created_at')
+    search_fields = ('name', 'formal_name', 'inn')
     list_filter = ('company_type', 'is_group')
-    # Используем inline или ссылки для профилей (Legal, Individual, etc.) если нужно,
-    # но пока просто регистрируем основные модели.
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'is_group', 'parent', 'in_charge', 'company_type')
+        }),
+        ('Details', {
+            'fields': ('formal_name', 'inn', 'kpp', 'ogrn', 'personal_id', 'address', 'mail_address', 'comment')
+        }),
+        ('Relationships', {
+            'fields': ('main_agreement', 'representative', 'main_bank_account')
+        })
+    )
 
-@admin.register(Business.Legal)
-class LegalAdmin(admin.ModelAdmin):
-    list_display = ('formal_name', 'inn', 'kpp', 'ogrn', 'company')
-    search_fields = ('formal_name', 'inn')
-    autocomplete_fields = ['company']
+@admin.register(Agreement)
+class AgreementAdmin(admin.ModelAdmin):
+    list_display = ('number', 'date', 'company')
+    search_fields = ('number', 'company__name')
 
-@admin.register(Business.Individual)
-class IndividualAdmin(admin.ModelAdmin):
-    list_display = ('formal_name', 'inn', 'ogrn', 'company')
-    search_fields = ('formal_name', 'inn')
-    autocomplete_fields = ['company']
+@admin.register(Agent)
+class AgentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'position', 'company')
+    search_fields = ('name', 'company__name')
 
-@admin.register(Business.Person)
-class PersonAdmin(admin.ModelAdmin):
-    list_display = ('formal_name', 'personal_id', 'company')
-    search_fields = ('formal_name',)
-    autocomplete_fields = ['company']
+@admin.register(BankAccount)
+class BankAccountAdmin(admin.ModelAdmin):
+    list_display = ('number', 'bank', 'company')
+    search_fields = ('number', 'company__name')
