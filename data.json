@@ -1,0 +1,144 @@
+[
+  {
+    "id": "1",
+    "company_type": "Legal",
+    "name": "ООО \"Энергоучет\"",
+    "main_agreement": 1,
+    "agreements": [
+      {
+        "id": 1,
+        "number": "502",
+        "date": "14.02.2017"
+      }
+    ],
+    "inn": "0273050716",
+    "kpp": "027301001",
+    "OGRN": "1040203729939",
+    "address": "450038, г. Уфа ул. Свободы, д.16",
+    "mail_address": "450038, г. Уфа ул. Свободы, д.16",
+    "representative": 1,
+    "agents": [
+      {
+        "id": 1,
+        "name": "",
+        "position": "",
+        "authority_doc": "Устава",
+        "details": ""
+      }
+    ],
+    "main_bank_account": 1,
+    "bank_accounts": [
+      {
+        "id": 1,
+        "number": "40702810906000006444",
+        "bank": "Отд. N8598 Сбербанка России г. Уфа",
+        "bik": "48073601",
+        "cor_number": "30101810300000000601"
+      }
+    ],
+    "comment": "",
+    "contacts": [
+      {
+        "id": 1,
+        "name": "Игорь",
+        "phone": [
+          "89196180999"
+        ],
+        "email": [],
+        "comment": "от Руслана"
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "company_type": "Legal",
+    "name": "ООО \"УРАЛТЕХСЕРВИС\"",
+    "main_agreement": 1,
+    "agreements": [
+      {
+        "id": 1,
+        "number": "509",
+        "date": "20.02.2017"
+      }
+    ],
+    "inn": "0273900836",
+    "kpp": "027301001",
+    "OGRN": "1150280008427",
+    "address": "450064, РБ, г. Уфа, ул. Интернациональная, 20",
+    "mail_address": "450112, РБ, г. Уфа, а/я 55",
+    "representative": 1,
+    "agents": [
+      {
+        "id": 1,
+        "name": "Хуснияров Юлай Марзавиевич",
+        "position": "Директор",
+        "authority_doc": "Устава",
+        "details": ""
+      }
+    ],
+    "main_bank_account": 1,
+    "bank_accounts": [
+      {
+        "id": 1,
+        "number": "40702810400130000789",
+        "bank": "Фил. ПАО \"УРАЛСИБ\" в г. Уфа",
+        "bik": "48073770",
+        "cor_number": "30101810600000000770"
+      }
+    ],
+    "comment": "",
+    "contacts": [
+      {
+        "id": 1,
+        "name": "",
+        "phone": [],
+        "email": [],
+        "comment": "от Руслана"
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "company_type": "Individual",
+    "name": "ИП ЗОЛОТОВ ДЕНИС НИКОЛАЕВИЧ",
+    "main_agreement": 1,
+    "agreements": [
+      {
+        "id": 1,
+        "number": "636",
+        "date": "15.08.2017"
+      }
+    ],
+    "inn": "740201758906",
+    "kpp": "",
+    "OGRN": "306740224200020",
+    "address": "454021 г. Челябинск, Молодогвардейцев 39в, кв. 70",
+    "mail_address": "454021 г. Челябинск, Молодогвардейцев 39в, кв. 70",
+    "representative": null,
+    "agents": [],
+    "main_bank_account": 1,
+    "bank_accounts": [
+      {
+        "id": 1,
+        "number": "40802810522110003146",
+        "bank": "АО КБ \"МОДУЛЬБАНК\"",
+        "bik": "45003734",
+        "cor_number": "30101810300000000734"
+      }
+    ],
+    "comment": "",
+    "contacts": [
+      {
+        "id": 1,
+        "name": "Елена",
+        "phone": [
+          "89193005684"
+        ],
+        "email": [
+          "zolotova_1984@bk.ru"
+        ],
+        "comment": ""
+      }
+    ]
+  }
+]

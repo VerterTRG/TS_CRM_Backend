@@ -12,7 +12,7 @@ from ninja_extra import api_controller
 
 from crm.models.companies import Company
 
-from .schemas import CompanyFilterSchema, CompanyInputUnion, CompanyOutputSchema # Наши схемы
+from .schemas import CompanyFilterSchema, CompanyInputUnion, CompanyOutputSchema, CompanyFullOutputSchema # Наши схемы
 from .services import create_company, get_list_companies # Наш сервис
 
 from django.db import connection # <-- Импортируем объект соединения
@@ -111,7 +111,7 @@ class CompanyController(ControllerBase):
         tags=["Companies"],
         summary="Получает одного контрагента по ID",
         response={
-            200: CompanyOutputSchema, # Успешный ответ - ОДИН объект CompanyOutputSchema
+            200: CompanyFullOutputSchema, # Успешный ответ - Полный объект с деталями
             404: ErrorSchema,         # Ошибка, если объект не найден
             500: ErrorSchema       # Можно оставить для необработанных ошибок
         }
@@ -120,12 +120,19 @@ class CompanyController(ControllerBase):
     def get_company_by_id(self, request, company_id: int = Path(..., alias="id", description="ID контрагента для поиска")): # type: ignore
         """
         Возвращает детали одного контрагента по его ID (pk).
+        Включает полную информацию: банковские счета, контакты, договоры, представители.
         ID передается как query параметр '?id=<number>'.
         """
         logger.info(f"VIEW CRM: get_company_by_id: schema={connection.schema_name}, requested_id={company_id}")
 
-        # Используем get_object_or_404 для получения объекта или автоматического ответа 404
-        qs = Company.objects.select_related('parent', 'in_charge').prefetch_related('legal', 'individual', 'person')
+        # Используем prefetch_related для загрузки связанных данных
+        qs = Company.objects.select_related('parent', 'in_charge') \
+            .prefetch_related(
+                'bank_accounts',
+                'contacts',
+                'agreements',
+                'agents'
+            )
         company = get_object_or_404(qs, pk=company_id)
 
         return company
